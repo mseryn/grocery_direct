@@ -1,0 +1,124 @@
+###------------------------------------------------------------------------------------------------
+### Helper Entities
+###------------------------------------------------------------------------------------------------
+
+Name:
+   *ID
+    First
+    MI
+    Last
+    Birth date
+        Day
+        Month
+        Year
+
+Address:
+   *ID
+    Street
+    Apt
+    State
+    Zip
+    Type 
+
+Credit Card:
+   *ID
+    Name
+      **ID
+    Number
+    Exp month
+    Exp year
+    Security code
+    Type (Visa, Mastercard, AmericanExpress)
+    Billing address
+      **ID    
+
+###------------------------------------------------------------------------------------------------
+### User Entities
+###------------------------------------------------------------------------------------------------
+
+Customer:
+   *ID
+    Name
+      **ID
+    Address
+      **ID
+    Credit Card
+      **ID    
+    Balance
+    Order History (NOT REQUIRED, DO ANYWAY) -- Made of {Order}s
+      **ID
+    Cart (BONUS) -- Made of Order
+      **ID
+
+Staff:
+   *ID
+    Name
+      **ID
+    Address
+      **ID
+    Salary
+    Title
+
+###------------------------------------------------------------------------------------------------
+### Product and Product Storage Entities
+###------------------------------------------------------------------------------------------------
+
+Warehouse:
+   *ID
+    Address
+      **ID
+    Storage Capacity
+    Stock
+        {Product}s
+          **ID
+
+Supplier: (BONUS)
+   *ID
+    Name
+      **ID
+    Address
+      **ID
+
+Product:
+   *ID
+    Name
+    Type (food, non-food, non-alcoholic beverage, alcoholic beverage)
+      **ID
+    Price
+    Image (BONUS)
+
+Order:
+   *ID
+    {Product}s
+      **ID
+    Total Price ()
+    Date
+        Day
+        Month
+        Year
+    Completion Status (Pending, Issued, In-Transit, Delivered) -- NOTE: customer may only have one 
+                                                                        pending order at a time
+
+###------------------------------------------------------------------------------------------------
+### Product Type Entities
+###------------------------------------------------------------------------------------------------
+
+Food:
+   *ID
+    Nutrition Facts
+    Description
+
+Non-Food:
+   *ID
+    Description
+
+Non-Alcoholic Beverage:
+   *ID
+    Nutrition Facts
+    Description
+
+Alcoholic Facts:
+   *ID
+    Nutrition Facts
+    Alcohol Content
+    Description
