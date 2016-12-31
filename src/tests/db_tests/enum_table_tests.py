@@ -8,34 +8,48 @@
 def test_person_types_enum():
     pass
 
+
 def test_product_types_enum():
     pass
+
 
 def test_address_types_enum():
     pass
 
+
 def test_order_status_enum():
-    pass
+
+    file_order_statuses = []
+    db_order_statuses   = []
+
+    # Get list of statuses from file order_statuses.txt
+    file_descriptor_order_statuses = file.open("order_statuses.txt")
+    for line in file_descriptor_order_statuses:
+        file_order_statuses.append(line.strip())
+
+    # Get order statuses and IDs from db
+    cursor.execute('select * from order_statuses')
+    for row in cursor:
+        db_order_statuses.append(row[1])
+
+    # Ensure all order statuses are in db
+    assert(file_order_statuses.sort() == db_order_statuses.sort()), "not all order statuses stored in database OR retrieval failed"
+
 
 def test_state_codes_enum():
 
-    state_codes_from_file = []
-    state_code_text_to_id_from_db = {}
+    file_state_codes = []
+    db_state_codes   = []
 
     # Get list of codes from file state_codes.txt
     file_descriptor_state_codes = file.open("state_codes.txt")
     for line in file_descriptor_state_codes:
-        state_codes_from_file.append(line.strip())
+        file_state_codes.append(line.strip())
         
     # Get state code IDs and text from db
     cursor.execute('select * from state_codes')
     for row in cursor:
-        state_code_text_to_id_from_db[row[1]] = row[0]
+        db_state_codes.append(row[1])
     
-    # Ensure all state codes are in dict from db
-    for state_code_db in state_code_text_to_id_from_db.keys():
-        for state_code_file in state_codes_from_file:
-            if state_code_file == state_code_db:
-                state_codes_from_file.remove(state_code_file)
-
-    assert(state_codes_from_file == []), "not all state codes stored in database OR retrieval failed"
+    # Ensure all state codes are in db
+    assert(file_state_codes.sort() == db_state_codes.sort()), "not all state codes stored in database OR retrieval failed"
