@@ -20,7 +20,12 @@ create table persons
     cart_id         integer foreign key references orders(id),
     type_id         integer foreign key references person_types(id),
     salary          numeric(8, 2),
+    job_title       varchar(20),
     balance         numeric(8, 2)
+    default_billing_address     integer foreign key references addresses(id),
+    default_shipping_address    integer foreign key references addresses(id),
+    default_warehouse_address   integer foreign key references addresses(id),
+    default_supplier_address    integer foreign key references addresses(id)
 )
 
 create table orders
