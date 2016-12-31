@@ -12,12 +12,36 @@
 #*      - View all products in supplier's stock
 #*      - Add products to supplier's stock
 #*      - Delete products from supplier's stock
-#*      - Modify ALL aspects of products (safely? not requirement)
-#*          -- price, image, description, nutrition facts, alcohol content
+#*      - Modify SUPPLIER price of products (safely? not requirement)
 #*      - Account administration:
 #*          -- change address
 #*          -- change username
 #*          -- change password
 #***
 
+def test_supplier_login():
+    pass
 
+def test_supplier_logout():
+    pass
+
+def test_supplier_view_products():
+    pass
+
+def test_supplier_add_product():
+    pass
+
+def test_supplier_remove_product():
+    pass
+
+def test_supplier_price_modify():
+    pass
+
+def test_supplier_address_change():
+    pass
+
+def test_supplier_username_change():
+    pass
+
+def test_supplier_password_change():
+    pass
