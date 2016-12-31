@@ -1,0 +1,4 @@
+non-alcoholic beverage
+alcoholic beverage
+food
+non-food
