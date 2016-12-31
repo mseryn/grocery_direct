@@ -42,9 +42,9 @@ create table orders
 create table products
 (
     id              integer primary key autoincriment,
+    name            varchar(20) not null,
     product_type_id integer foreign key references product_types(id),
     image_id        integer foreign key references product_images(id),
-    price           numeric(8, 2) not null,
     description     varchar(255),
     nutrition_facts varchar(255),
     alcohol_content varchar(255)

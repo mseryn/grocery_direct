@@ -5,7 +5,9 @@
 #*  Written for CS 425-02 Fall 2016 Final Project
 #***
 
-# ACCOUNT AUTHENTICATION
+#**************************************************************************************************
+#**  ACCOUNT AUTHENTICATION
+#**************************************************************************************************
 
 def person_login():
     # successful login
@@ -17,9 +19,40 @@ def person_login_username_nonexistant():
     # nonexistant username
 
 def person_logout():
+
+
+#**************************************************************************************************
+# CREATING ACCOUNTS
+#**************************************************************************************************
+
+def person_add_customer_account():
+    # successfully add customer account (staff and site administrators only)
+    pass
+
+def person_add_staff_account():
+    # successfully add staff account (staff and site administrators only)
+    pass
+
+def person_add_supplier_account():
+    # successfully add supplier account (staff and administrators only)
+    pass
+
+def person_add_site_admin_account():
+    # successfully add site administrator account (site administrator only)
+    pass
+
+def person_delete_account():
+    # successfully delete an account (site administrator only)
+    pass
+
+def person_delete_default_account():
+    # unsuccessfully delete default site administrator account (should never happen)
+    pass
     
 
+#**************************************************************************************************
 # ACCOUNT ADMINISTRATION
+#**************************************************************************************************
 
 # Manipulating username
 
@@ -160,7 +193,9 @@ def person_modify_last_name_null():
     pass
 
 
+#**************************************************************************************************
 # ATTRIBUTE MODIFICATION
+#**************************************************************************************************
 
 # Modify cart_id
 
@@ -236,4 +271,93 @@ def person_modify_person_type_id():
     # unsuccessfully modify person's type ID
     pass
 
+# Modify credit card
 
+# TODO
+
+#**************************************************************************************************
+# INTERACTING WITH PRODUCTS
+#**************************************************************************************************
+
+# Modify cart
+
+def person_add_product_to_cart():
+    # successfully add product to customer's cart (customer or site administrator only)
+    pass
+
+def person_add_product_to_cart_out_of_state():
+    # unsuccessfully add product not in warehouse in state to customer's cart
+    pass
+
+def person_add_product_to_cart_out_of_stock():
+    # unsuccessfully add out of stock product to customer's cart
+    pass
+
+def person_add_nonexistant_product_to_cart():
+    # unsuccessfully add nonexistant product to customer's cart
+    pass
+
+def person_delete_product_from_cart():
+    # successfully delete product from customer's cart (customer or site administrator only)
+    pass
+
+def person_delete_nonexistant_product_from_cart():
+    # successfully return after attempt to delete nonexistant product from cart
+    # should never happen - ensure everything behaves in case it does
+    pass
+
+def person_modify_product_quantity():
+    # successfully modify customer's quantity of product in cart
+    pass
+
+def person_modify_product_quantity_to_zero():
+    # successfully remove product if quantity set to zero in cart
+    pass
+
+def person_modify_product_quantity_negative_number():
+    # unsuccessfully modify product quantity in cart if quantity set to non-positive, nonzero value
+    pass
+
+# Modify available products (staff and site administrators only)
+
+def person_add_product():
+    # successfully add new product
+    pass
+
+def person_remove_product():
+    # successfully remove product
+    pass
+
+def person_remove_nonexisant_product():
+    # successfully return from attempt to remove nonexistant product
+    pass
+
+def person_modify_product_name():
+    # succesfully modify product name
+    pass
+
+def person_modify_product_name_null():
+    # unsuccessfully modify product name with null value
+    pass
+
+def person_modify_product_type():
+    # successfully modify product to new type -- WILL INCLUDE ADDING NEW FIELDS
+    pass
+
+def person_modify_product_type_nonexistant_type_id():
+    # unsuccessfully attempt to modify product type with nonexistant type
+    pass
+
+def person_modify_image_id():
+    # successfully modify product's image
+    pass
+
+def person_modify_image_id_nonexistant():
+    # unsuccessfully modify product's image using nonexistant image ID
+    pass
+
+def person_modify_product_description():
+    # successfully modify product description
+    pass
+
+def person_modify 
