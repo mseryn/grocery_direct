@@ -14,7 +14,22 @@ def test_product_types_enum():
 
 
 def test_address_types_enum():
-    pass
+    
+    file_address_types = []
+    db_address_types   = []
+
+    # Get list of address types from file order_statuses.txt
+    file_descriptor_address_types = file.open("address_types.txt")
+    for line in file_descriptor_address_types:
+        file_address_types.append(line.strip())
+
+    # Get address types from db
+    cursor.execute('select * from address_types')
+    for row in cursor:
+        db_address_types.append(row[1])
+
+    # Ensure all address types are in db
+    assert(file_address_types.sort() == db_address_types.sort()), "not all address types stored in database OR retrieval failed"
 
 
 def test_order_status_enum():
@@ -27,7 +42,7 @@ def test_order_status_enum():
     for line in file_descriptor_order_statuses:
         file_order_statuses.append(line.strip())
 
-    # Get order statuses and IDs from db
+    # Get order statuses from db
     cursor.execute('select * from order_statuses')
     for row in cursor:
         db_order_statuses.append(row[1])
