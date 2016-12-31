@@ -10,7 +10,22 @@ def test_person_types_enum():
 
 
 def test_product_types_enum():
-    pass
+    
+    file_product_types = []
+    db_product_types   = []
+
+    # Get list of product types from file order_statuses.txt
+    file_descriptor_product_types = file.open("product_types.txt")
+    for line in file_descriptor_product_types:
+        file_product_types.append(line.strip())
+
+    # Get product types from db
+    cursor.execute('select * from product_types')
+    for row in cursor:
+        db_product_types.append(row[1])
+
+    # Ensure all product types are in db
+    assert(file_product_types.sort() == db_product_types.sort()), "not all product types stored in database OR retrieval failed"
 
 
 def test_address_types_enum():
