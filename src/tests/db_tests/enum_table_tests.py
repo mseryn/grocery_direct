@@ -6,7 +6,22 @@
 #***
 
 def test_person_types_enum():
-    pass
+    
+    file_person_types = []
+    db_person_types   = []
+
+    # Get list of person types from file order_statuses.txt
+    file_descriptor_person_types = file.open("person_types.txt")
+    for line in file_descriptor_person_types:
+        file_person_types.append(line.strip())
+
+    # Get person types from db
+    cursor.execute('select * from person_types')
+    for row in cursor:
+        db_person_types.append(row[1])
+
+    # Ensure all person types are in db
+    assert(file_person_types.sort() == db_person_types.sort()), "not all person types stored in database OR retrieval failed"
 
 
 def test_product_types_enum():
