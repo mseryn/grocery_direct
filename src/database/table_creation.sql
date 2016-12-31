@@ -12,6 +12,7 @@ Written for CS 425-02 Fall 2016 Project
 create table persons 
 (
     id              integer primary key autoincriment,
+    username        varchar(20) not null unique,
     first_name      varchar(20) not null,
     middle_initial  char(1),
     last_name       varchar(20) not null,
@@ -43,7 +44,7 @@ create table products
     alcohol_content varchar(255)
 )
 
-create table warehouses
+*create table warehouses
 (
     id              integer primary key autoincriment,
     address_id      integer foreign key references addresses(id),
@@ -130,3 +131,9 @@ create tabe warehouse_to_product
     warehouse_id    integer foreign key references warehouses(id),
     product_id      integer foreign key references products(id)
 )
+
+/*
+ * Constructing Enum Tables
+*/
+
+TODO
