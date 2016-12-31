@@ -13,6 +13,7 @@ create table persons
 (
     id              integer primary key autoincriment,
     username        varchar(20) not null unique,
+    password        varchar(20) not null,
     first_name      varchar(20) not null,
     middle_initial  char(1),
     last_name       varchar(20) not null,
