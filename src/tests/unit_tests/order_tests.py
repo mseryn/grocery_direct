@@ -10,22 +10,33 @@
 #*      -- shipping address
 #*      -- status
 #*      -- placement date
-#*      -- customer (owner)
+#*      -- customer (owner) -- TODO, how implement? Very vital.
 #*  - get:
 #*      -- product list
 #*      -- total cost of products
 #*      -- shipping address
-#*      -- shipping state (for ease)
+#*      -- shipping state (for ease) - TODO
 #*      -- order placement date
 #*      -- order status
 #*      -- customer ID
 #*  - modify:
+#*      -- product quantity -- TODO, vital
 #*      -- shipping address
-#*      -- order placement date
+#*      -- order placement date -- TODO, how implement?
 #*      -- order status
 #*  - add/remove:
 #*      -- products from list
 #***
+
+#**************************************************************************************************
+#**  ORDERS: TESTING CUSTOMER
+#**************************************************************************************************
+
+def order_get_customer():
+    # successfully retrieve customer
+    order = order.Order()
+    assert_true(order_customer.get_id(), 1, 
+        "get_customer did not return correct customer ID for order")
 
 #**************************************************************************************************
 #**  ORDERS: TESTING PRODUCTS
@@ -94,7 +105,29 @@ def order_get_products_empty_list():
     order = order.Order()
     assert(order.get_products() = []), "get_products did not correctly list empty list of products"
 
+def order_get_total_cost():
+    # successfully retrieve total cost for items in product list
+    order = order.Order()
+    product = product.Product("test product", "non-food", 1.00, description = "unit test product")
+    order.add_product(product)
+    assert_equals(order.get_total_cost(),  1.00, "get_total_cost did not correctly retrieve cost")
 
+def order_get_total_cost_two_same_item():
+    # successfully retrieve total cost for items in product list
+    order = order.Order()
+    product = product.Product("test product", "non-food", 1.00, description = "unit test product")
+    order.add_product(product)
+    order.add_product(product)
+    assert_equals(order.get_total_cost(),  2.00, "get_total_cost did not correctly retrieve cost")
+
+def order_get_total_cost_empty_list():
+    # successfully retrieve total cost of $0 for products in order
+    order = order.Order()
+    assert_equals(order.get_total_cost(),  0, 
+    "get_products did not correctly retrieve cost of zero")
+
+
+# TODO - implement change quantity
 
 #**************************************************************************************************
 #**  ORDERS: TESTING ADDRESSES
@@ -157,6 +190,29 @@ def order_get_billing_address():
         "modify_billing_address failed to modify zip code"
 
 #**************************************************************************************************
-#**  TESTING ADDRESSES
+#**  ORDER: TESTING STATUS
 #**************************************************************************************************
+
+def order_get_initial_status():
+    # successfully retrieve order status of "pending" (cart) prior to any changes to status
+    order = order.Order()
+    assert(order.get_status(), "pending", "get_status() failed to retrieve pending status"
+
+def order_get_shipped_status():
+    # successfully retrieve order status of "shipped" following change of status to "shipped"
+    order = order.Order()
+    order.mark_as_shipped()
+    assert(order.get_status(), "shipped", "get_status() failed to retrieve shipped status"
+    
+def order_get_delivered_status():
+    # successfully retrieve order status of "delivered" following change of status to "delivered"
+    order = order.Order()
+    order.mark_as_delivered()
+    assert(order.get_status(), "delivered", "get_status() failed to retrieve delivered status"
+
+def order_get_canceled_status():
+    # successfully retrieve order status of "canceled" following change of status to "canceled"
+    order = order.Order()
+    order.mark_as_canceled()
+    assert(order.get_status(), "canceled", "get_status() failed to retrieve canceled status"
 
