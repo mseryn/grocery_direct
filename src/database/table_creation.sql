@@ -1,8 +1,8 @@
 /*
-GroceryDirect: Database Creation
-
-Author: Melanie Cornelius, mseryn
-Written for CS 425-02 Fall 2016 Project
+ * GroceryDirect: Database Creation
+ *
+ * Author: Melanie Cornelius, mseryn
+ * Written for CS 425-02 Fall 2016 Project
 */
 
 /*
@@ -21,7 +21,7 @@ create table persons
     type_id         integer foreign key references person_types(id),
     salary          numeric(8, 2),
     job_title       varchar(20),
-    balance         numeric(8, 2)
+    balance         numeric(8, 2),
     default_billing_address     integer foreign key references addresses(id),
     default_shipping_address    integer foreign key references addresses(id),
     default_warehouse_address   integer foreign key references addresses(id),
@@ -129,17 +129,32 @@ create table state_codes
 create table order_to_product
 (
     order_id        integer foreign key references orders(id),
-    product_id      integer foreign key references products(id)
+    product_id      integer foreign key references products(id),
+    order_price     numeric(8, 2) not null
 )
 
-create tabe warehouse_to_product
+create table warehouse_to_product
 (
     warehouse_id    integer foreign key references warehouses(id),
     product_id      integer foreign key references products(id)
+)
+
+create table supplier_to_product
+(
+    supplier_id     integer foreign key references person(id),
+    product_id      integer foreign key references products(id),
+    supplier_price  numeric(8, 2) not null
+)
+
+create table state_to_product
+(
+    state_id        integer primary key foreign key references state_codes(id),
+    product_id      integer primary key foreign key references products(id),
+    state_price     numeric(8, 2) not null
 )
 
 /*
  * Constructing Enum Tables
 */
 
-TODO
+/*TODO*/
