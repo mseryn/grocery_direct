@@ -28,7 +28,7 @@
 #***
 
 #**************************************************************************************************
-#**  TESTING PRODUCTS
+#**  ORDERS: TESTING PRODUCTS
 #**************************************************************************************************
 
 def order_add_product():
@@ -87,16 +87,76 @@ def order_get_products():
     order = order.Order()
     product = product.Product("test product", "non-food", 1.00, description = "unit test product")
     order.add_product(product)
-    assert(order.get_products = [product]), "get_products did not correctly list products"
+    assert(order.get_products() = [product]), "get_products did not correctly list products"
 
 def order_get_products_empty_list():
     # get empty list from products
     order = order.Order()
-    assert(order.get_products = []), "get_products did not correctly list empty list of products"
+    assert(order.get_products() = []), "get_products did not correctly list empty list of products"
 
+
+
+#**************************************************************************************************
+#**  ORDERS: TESTING ADDRESSES
+#**************************************************************************************************
+
+def modify_order_shipping_address():
+    # successfully modify order shipping address
+    order = order.Order()
+    order.modify_shipping_address("5555 test st.", "test city", "AL", 55555)
+    order_address = order._shipping_address
+    assert(order_address.get_street() = "5555 test st."), 
+        "modify_shipping_address failed to modify street"
+    assert(order_address.get_city() = "test city"), 
+        "modify_shipping_address failed to modify city"
+    assert(order_address.get_state() = "AL"), 
+        "modify_shipping_address failed to modify state code"
+    assert(order_address.get_zip_code() = 55555), 
+        "modify_shipping_address failed to modify zip code"
+
+def modify_order_billing_address():
+    # successfully modify order billing address
+    order = order.Order()
+    order.modify_billing_address("5555 test st.", "test city", "AL", 55555)
+    order_address = order._billing_address
+    assert(order_address.get_street() = "5555 test st."), 
+        "modify_billing_address failed to modify street"
+    assert(order_address.get_city() = "test city"), 
+        "modify_billing_address failed to modify city"
+    assert(order_address.get_state() = "AL"), 
+        "modify_billing_address failed to modify state code"
+    assert(order_address.get_zip_code() = 55555), 
+        "modify_billing_address failed to modify zip code"
+
+def order_get_shipping_address():
+    # successfully retrieve shipping address with get_address
+    order = order.Order()
+    order.modify_shipping_address("5555 test st.", "test city", "AL", 55555)
+    order_address = order.get_shipping_address()
+    assert(order_address.get_street() = "5555 test st."), 
+        "modify_shipping_address failed to modify street"
+    assert(order_address.get_city() = "test city"), 
+        "modify_shipping_address failed to modify city"
+    assert(order_address.get_state() = "AL"), 
+        "modify_shipping_address failed to modify state code"
+    assert(order_address.get_zip_code() = 55555), 
+        "modify_shipping_address failed to modify zip code"
+
+def order_get_billing_address():
+    # successfully retrieve billing address with get_address
+    order = order.Order()
+    order.modify_billing_address("5555 test st.", "test city", "AL", 55555)
+    order_address = order.get_billing_address()
+    assert(order_address.get_street() = "5555 test st."), 
+        "modify_billing_address failed to modify street"
+    assert(order_address.get_city() = "test city"), 
+        "modify_billing_address failed to modify city"
+    assert(order_address.get_state() = "AL"), 
+        "modify_billing_address failed to modify state code"
+    assert(order_address.get_zip_code() = 55555), 
+        "modify_billing_address failed to modify zip code"
 
 #**************************************************************************************************
 #**  TESTING ADDRESSES
 #**************************************************************************************************
-
 
