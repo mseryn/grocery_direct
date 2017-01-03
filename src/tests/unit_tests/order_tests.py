@@ -9,7 +9,7 @@
 #*      -- product list
 #*      -- shipping address
 #*      -- status
-#*      -- placement date
+#*      -- placement date -- TODO, how implement?
 #*      -- customer (owner) -- TODO, how implement? Very vital.
 #*  - get:
 #*      -- product list
@@ -216,3 +216,6 @@ def order_get_canceled_status():
     order.mark_as_canceled()
     assert(order.get_status(), "canceled", "get_status() failed to retrieve canceled status"
 
+#**************************************************************************************************
+#**  ORDERS: TESTING PLACEMENT DATE
+#**************************************************************************************************
