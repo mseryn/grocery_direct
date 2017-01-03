@@ -6,6 +6,7 @@
 #*  
 #*  Product Description:
 #*  - has:
+#*      -- id
 #*      -- name
 #*      -- type
 #*      -- image -- TODO, optional, implement LAST
@@ -27,6 +28,16 @@
 #*      -- nutrition facts
 #*      -- alcohol content
 #***
+
+#**************************************************************************************************
+#**  PRODUCT: TESTING NAME 
+#**************************************************************************************************
+
+def product_get_id():
+    # successfully retrieve product ID using get_id()
+    product = product.Product("test product", "non-food", description = "unit test product")
+    assert(product.get_id() == 1), "get_id() did not return correct product ID"
+    
 
 #**************************************************************************************************
 #**  PRODUCT: TESTING NAME 
