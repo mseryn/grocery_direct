@@ -6,6 +6,7 @@
 #*  
 #*  Product Description:
 #*  - has:
+#*      -- id
 #*      -- name
 #*      -- type
 #*      -- image -- TODO, optional, implement LAST
@@ -28,9 +29,21 @@
 #*      -- alcohol content
 #***
 
+#* TODO: Questions:
+#*          -- going to need a get_product_by_id() method outside this class?
+
+# String defaults:
+default_product_description = "default product description"
+default_nutrition_facts     = "nutrition facts not yet set"
+default_alcohol_content     = "alcohol content not yet set"
+
+default_inedible_nutrition_facts = "product is not consumable and does not have nutrition facts"
+default_non_alcoholic_content    = "product is non-alcoholic and does not have alcohol content"
+
 class Product():
 
     def __init__(self, name, type_string, description, nutrition_facts = None, alcohol_content = None):
+        _id = self.get_id()
         _name = name
         _type = self.modify_type(type_string)
         _description = self.modify_description(description)
@@ -40,30 +53,24 @@ class Product():
         # TODO: requires functional person to test, do later
         #_price = self.get_price()
 
-        # Setting nutrition facts and alcohol content as needed
-        if (_type != "non-food"):
-            _nutrition_facts = self.modify_nutrition_facts(nutrition_facts)
-
-        else:
-            _nutrition_facts = "product is not consumable and does not have nutrition facts"
-
-        if (_type == "alcoholic beverage"):
-            _alcohol_content = self.modify_alcohol_content(alcohol_content)
-        else:
-            _alcohol_content = "product is non-alcoholic and does not have alcohol content"
-
         # TODO: move these fields to modify_blah methods, more correct
 
     # Get Methods
 
     def get_name(self):
-        return _name
+        return self._name
 
     def get_type(self):
-        return _type
+        return self._type
 
     def get_description(self):
-        return _description
+        return self._description
+
+    def get_nutrition_facts(self):
+        return self._nutrition_facts
+
+    def get_alcohol_content(self):
+        return self._alcohol_content
 
     # Modification Methods
 
@@ -74,7 +81,20 @@ class Product():
         self._description = description
 
     def modify_nutrition_facts(self, nutrition_facts):
-        pass
+        if (_type != "non-food"):
+            if nutrition_facts:
+                self._nutrition_facts = nutrition_facts
+            else:
+                self._nutrition_facts = default_nutrition_facts
+
+        else:
+            self._nutrition_facts = default_inedible_nutrition_facts 
 
     def modify_alcohol_content(self, alcohol_content):
-        pass
+        if (_type == "alcoholic beverage"):
+            if alcohol_content:
+                self._alcohol_content = alcohol_content
+            else:
+                self._alcohol_content = default_alcohol_content
+        else:
+            self._alcohol_content = default_non_alcoholic_content
