@@ -6,6 +6,7 @@
 #*  
 #*  Order Description:
 #*  - has:
+#*      -- id
 #*      -- product list
 #*      -- shipping address
 #*      -- status
@@ -32,11 +33,22 @@
 #**  ORDERS: TESTING CUSTOMER
 #**************************************************************************************************
 
+def order_get_id():
+    # successfully retrieve order ID
+    order = order.Order()
+    assert_true(order.get_id(), 1, /
+        "get_id() did not return correct order ID")
+
+
+#**************************************************************************************************
+#**  ORDERS: TESTING CUSTOMER
+#**************************************************************************************************
+
 def order_get_customer():
     # successfully retrieve customer
     order = order.Order()
-    assert_true(order_customer.get_id(), 1, 
-        "get_customer did not return correct customer ID for order")
+    assert_true(order.get_customer_id(), 1, /
+        "get_customer_id() did not return correct customer ID for order")
 
 #**************************************************************************************************
 #**  ORDERS: TESTING PRODUCTS
@@ -46,14 +58,14 @@ def order_add_product():
     # successfully add product 
     order = order.Order()
     product = product.Product("test product", "non-food", 1.00, description = "unit test product")
-    order.add_product(product)
+    order.add_product(product.get_id())
     assert(order._products = [product]), "add_product did not correctly add a product"
 
 def order_add_invalid_product():
     # unsuccessfully add nonexistant product
     order = order.Order()
     product = "this is not a valid product"
-    order.add_product(product)
+    order.add_product(product.get_id())
     assert(order._products = [product]), "add_product incorrectly added invalid product"
 
 def order_add_null_product():
@@ -66,8 +78,8 @@ def order_remove_product():
     # remove product 
     order = order.Order()
     product = product.Product("test product", "non-food", 1.00, description = "unit test product")
-    order.add_product(product)
-    order.remove_product(product)
+    order.add_product(product.get_id())
+    order.remove_product(product.get_id())
     assert(order._products = []), "remove_product did not correctly remove a product"
 
 def order_remove_nonexistant_product():
@@ -75,16 +87,16 @@ def order_remove_nonexistant_product():
     # does NOT return an error
     order = order.Order()
     product = product.Product("test product", "non-food", 1.00, description = "unit test product")
-    order.remove_product(product)
+    order.remove_product(product.get_id())
     assert(order._products = []), "remove_product incorrectly returned removing invalid product"
 
 def order_remove_invalid_product():
     # unsuccessfully remove nonexistant product 
     order = order.Order()
     product = "this is not a valid product"
-    order.add_product(product)
-    order.remove_product(product)
-    assert(order._products = []), 
+    order.add_product(product.get_id())
+    order.remove_product(product.get_id())
+    assert(order._products = []), /
         "remove_product incorrectly returned removing nonexistant product"
 
 def order_remove_null_product():
@@ -97,7 +109,7 @@ def order_get_products():
     # get list of all product s
     order = order.Order()
     product = product.Product("test product", "non-food", 1.00, description = "unit test product")
-    order.add_product(product)
+    order.add_product(product.get_id())
     assert(order.get_products() = [product]), "get_products did not correctly list products"
 
 def order_get_products_empty_list():
@@ -109,25 +121,32 @@ def order_get_total_cost():
     # successfully retrieve total cost for items in product list
     order = order.Order()
     product = product.Product("test product", "non-food", 1.00, description = "unit test product")
-    order.add_product(product)
+    order.add_product(product.get_id())
     assert_equals(order.get_total_cost(),  1.00, "get_total_cost did not correctly retrieve cost")
 
 def order_get_total_cost_two_same_item():
     # successfully retrieve total cost for items in product list
     order = order.Order()
     product = product.Product("test product", "non-food", 1.00, description = "unit test product")
-    order.add_product(product)
-    order.add_product(product)
+    order.add_product(product.get_id())
+    order.add_product(product.get_id())
     assert_equals(order.get_total_cost(),  2.00, "get_total_cost did not correctly retrieve cost")
 
 def order_get_total_cost_empty_list():
     # successfully retrieve total cost of $0 for products in order
     order = order.Order()
-    assert_equals(order.get_total_cost(),  0, 
+    assert_equals(order.get_total_cost(),  0, /
     "get_products did not correctly retrieve cost of zero")
 
+def order_change_product_quantity():
+    # successfully change quantity of product in order
+    order = order.Order()
+    product = product.Product("test product", "non-food", 1.00, description = "unit test product")
+    order.add_product(product.get_id())
+    order.change_quantity(product.get_id(), 2)
+    assert_equals(order.get_product_quantity(product.get_id()), 2, "
+    
 
-# TODO - implement change quantity
 
 #**************************************************************************************************
 #**  ORDERS: TESTING ADDRESSES
@@ -152,13 +171,13 @@ def modify_order_billing_address():
     order = order.Order()
     order.modify_billing_address("5555 test st.", "test city", "AL", 55555)
     order_address = order._billing_address
-    assert(order_address.get_street() = "5555 test st."), 
+    assert(order_address.get_street() = "5555 test st."), /
         "modify_billing_address failed to modify street"
-    assert(order_address.get_city() = "test city"), 
+    assert(order_address.get_city() = "test city"), / 
         "modify_billing_address failed to modify city"
-    assert(order_address.get_state() = "AL"), 
+    assert(order_address.get_state() = "AL"), /
         "modify_billing_address failed to modify state code"
-    assert(order_address.get_zip_code() = 55555), 
+    assert(order_address.get_zip_code() = 55555), /
         "modify_billing_address failed to modify zip code"
 
 def order_get_shipping_address():
@@ -166,13 +185,13 @@ def order_get_shipping_address():
     order = order.Order()
     order.modify_shipping_address("5555 test st.", "test city", "AL", 55555)
     order_address = order.get_shipping_address()
-    assert(order_address.get_street() = "5555 test st."), 
+    assert(order_address.get_street() = "5555 test st."), /
         "modify_shipping_address failed to modify street"
-    assert(order_address.get_city() = "test city"), 
+    assert(order_address.get_city() = "test city"), /
         "modify_shipping_address failed to modify city"
-    assert(order_address.get_state() = "AL"), 
+    assert(order_address.get_state() = "AL"), /
         "modify_shipping_address failed to modify state code"
-    assert(order_address.get_zip_code() = 55555), 
+    assert(order_address.get_zip_code() = 55555), /
         "modify_shipping_address failed to modify zip code"
 
 def order_get_billing_address():
@@ -180,13 +199,13 @@ def order_get_billing_address():
     order = order.Order()
     order.modify_billing_address("5555 test st.", "test city", "AL", 55555)
     order_address = order.get_billing_address()
-    assert(order_address.get_street() = "5555 test st."), 
+    assert(order_address.get_street() = "5555 test st."), /
         "modify_billing_address failed to modify street"
-    assert(order_address.get_city() = "test city"), 
+    assert(order_address.get_city() = "test city"), /
         "modify_billing_address failed to modify city"
-    assert(order_address.get_state() = "AL"), 
+    assert(order_address.get_state() = "AL"), /
         "modify_billing_address failed to modify state code"
-    assert(order_address.get_zip_code() = 55555), 
+    assert(order_address.get_zip_code() = 55555), /
         "modify_billing_address failed to modify zip code"
 
 #**************************************************************************************************
