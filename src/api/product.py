@@ -33,9 +33,9 @@
 #*          -- going to need a get_product_by_id() method outside this class?
 
 # String defaults:
-default_product_description = "default product description"
-default_nutrition_facts     = "nutrition facts not yet set"
-default_alcohol_content     = "alcohol content not yet set"
+default_description     = "default product description"
+default_nutrition_facts = "nutrition facts not yet set"
+default_alcohol_content = "alcohol content not yet set"
 
 default_inedible_nutrition_facts = "product is not consumable and does not have nutrition facts"
 default_non_alcoholic_content    = "product is non-alcoholic and does not have alcohol content"
@@ -56,6 +56,10 @@ class Product():
         # TODO: move these fields to modify_blah methods, more correct
 
     # Get Methods
+
+    def get_id(self):
+        self._id = 
+        return self._id
 
     def get_name(self):
         return self._name
@@ -78,7 +82,10 @@ class Product():
         pass
 
     def modify_description(self, description):
-        self._description = description
+        if description:
+            self._description = description
+        else:
+            self._description = default_description
 
     def modify_nutrition_facts(self, nutrition_facts):
         if (_type != "non-food"):
