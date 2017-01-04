@@ -40,6 +40,8 @@ default_alcohol_content = "alcohol content not yet set"
 default_inedible_nutrition_facts = "product is not consumable and does not have nutrition facts"
 default_non_alcoholic_content    = "product is non-alcoholic and does not have alcohol content"
 
+# Store only ID; have get/modify methods interact with DB, store nothing else
+
 class Product():
 
     def __init__(self, name, type_string, description, nutrition_facts = None, alcohol_content = None):
