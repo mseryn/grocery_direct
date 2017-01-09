@@ -1,0 +1,1 @@
+../tests/db_tests/card_types.txt
