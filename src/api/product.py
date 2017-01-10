@@ -32,6 +32,8 @@
 #* TODO: Questions:
 #*          -- going to need a get_product_by_id() method outside this class?
 
+import cx_Oracle
+
 # String defaults:
 default_description     = "default product description"
 default_nutrition_facts = "nutrition facts not yet set"
@@ -45,6 +47,10 @@ default_non_alcoholic_content    = "product is non-alcoholic and does not have a
 class Product():
 
     def __init__(self, name, type_string, description, nutrition_facts = None, alcohol_content = None):
+        db = cx_Oracle.connect('system', 'oracle')
+        cursor = db.cursor()
+        cursor.execute("insert into products (name, description, ")
+
         _id = self.get_id()
         _name = name
         _type = self.modify_type(type_string)
@@ -60,7 +66,6 @@ class Product():
     # Get Methods
 
     def get_id(self):
-        self._id = 
         return self._id
 
     def get_name(self):

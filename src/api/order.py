@@ -29,6 +29,8 @@
 #*      -- products from list
 #***
 
+import cx_Oracle
+
 class Order():
     def __init__(self, customer_id):
         # init new row in table
