@@ -1,29 +1,3 @@
-#***
-#*  GroceryDirect - Database Enum Table Tests
-#*  
-#*  Author: Melanie Cornelius, mseryn
-#*  Written for CS 425-02 Fall 2016 Final Project
-#***
-
-def test_person_types_enum():
-    pass
-
-def test_product_types_enum():
-    pass
-
-def test_address_types_enum():
-    pass
-
-def test_order_status_enum():
-    pass
-
-def test_state_codes_enum():
-    pass
-
-
-
-
-
 AL
 AK
 AZ
