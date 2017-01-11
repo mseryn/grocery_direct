@@ -86,22 +86,23 @@ class Product():
         return name
 
     def get_type(self):
+        # Returns string of product type -- not type_id
         cursor.execute("select product_types.product_type \
                         from products join product_types on products.product_type_id = product_types.id \
                         where products.id = :product_id", product_id = self._id)
-        return cursor.fetchone()
+        return cursor.fetchone()[0]
 
     def get_description(self):
         cursor.execute("select description from products where id = :product_id", product_id = self._id)
-        return cursor.fetchone()
+        return cursor.fetchone()[0]
 
     def get_nutrition_facts(self):
         cursor.execute("select nutrition_facts from products where id = :product_id", product_id = self._id)
-        return cursor.fetchone()
+        return cursor.fetchone()[0]
 
     def get_alcohol_content(self):
         cursor.execute("select alcohol_content from products where id = :product_id", product_id = self._id)
-        return cursor.fetchone()
+        return cursor.fetchone()[0]
 
     # Modification Methods
 
@@ -114,27 +115,27 @@ class Product():
     def modify_type(self, type_string):
         # Verify it's a valid type (in the table) - selection should return nothing if type invalid
         cursor.execute("select id from product_types where product_type = :input_type", input_type = type_string)
-        type_id = cursor.fetchone()
+        type_id = cursor.fetchone()[0]
         if type(type_id) == 'int':
             cursor.execute("update products set product_type_id = :input_id", input_id = type_id)
             db.commit()
         # else do nothing -- possibly eventually return error here
 
-    def modify_description(self, description):
-        if description:
+    def modify_description(self, input_description):
+        if input_description:
             cursor.execute("update products set description = :new_description where id = :product_id", \
-                new_description = description, product_id = self._id)
+                new_description = input_description, product_id = self._id)
             db.commit()
         else:
             cursor.execute("update products set description = :new_description where id = :product_id", \
                 new_description = DEFAULT_DESCRIPTION, product_id = self._id)
             db.commit()
 
-    def modify_nutrition_facts(self, nutrition_facts):
+    def modify_nutrition_facts(self, input_nutrition_facts):
         if (self.get_type() != "non-food"):
-            if nutrition_facts:
+            if input_nutrition_facts:
                 cursor.execute("update products set nutrition_facts = :new_nutrition_facts where id = :product_id", \
-                    new_nutrition_facts = nutrition_facts, product_id = self._id)
+                    new_nutrition_facts = input_nutrition_facts, product_id = self._id)
                 db.commit()
             else:
                 cursor.execute("update products set nutrition_facts = :new_nutrition_facts where id = :product_id", \
@@ -143,7 +144,7 @@ class Product():
 
         else:
             cursor.execute("update products set nutrition_facts = :new_nutrition_facts where id = :product_id", \
-                new_description = DEFAULT_INEDIBLE_NUTRITION_FACTS, product_id = self._id)
+                new_nutrition_facts = DEFAULT_INEDIBLE_NUTRITION_FACTS, product_id = self._id)
             db.commit()
 
     def modify_alcohol_content(self, alcohol_content):

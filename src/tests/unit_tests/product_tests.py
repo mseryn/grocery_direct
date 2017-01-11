@@ -38,6 +38,7 @@ import product
 def test_product_get_id():
     # successfully retrieve product ID using get_id()
     test_product = product.Product("test product", "non-food", description = "unit test product")
+    print test_product.get_id()
     assert(test_product.get_id() == test_product._id), "get_id() did not return correct product ID"
     
 
@@ -67,6 +68,68 @@ def test_product_modify_name_null():
 #**************************************************************************************************
 #**  PRODUCT: TESTING TYPES
 #**************************************************************************************************
+
+def test_product_get_non_food_type():
+    type_string = "non-food"
+    test_product = product.Product("test product", type_string, description = "unit test product")
+    assert(test_product.get_type() == type_string), \
+        "get_type() did not correctly return non-food type"
+
+def test_product_get_food_type():
+    type_string = "food"
+    test_product = product.Product("test product", type_string, description = "unit test product")
+    assert(test_product.get_type() == type_string), \
+        "get_type() did not correctly return food type"
+
+def test_product_get_non_alcoholic_beverage_type():
+    type_string = "non-alcoholic beverage"
+    test_product = product.Product("test product", type_string, description = "unit test product")
+    assert(test_product.get_type() == type_string), \
+        "get_type() did not correctly return non-alcoholic beverage type"
+
+def test_product_get_alcoholic_beverage_type():
+    type_string = "alcoholic beverage"
+    test_product = product.Product("test product", type_string, description = "unit test product")
+    assert(test_product.get_type() == type_string), \
+        "get_type() did not correctly return alcoholic beverage type"
+
+def product_invalid_type():
+    # Assert throws error -- TODO
+    pass
+    type_string = "invalid"
+    test_product = product.Product("test product", type_string, description = "unit test product")
+
+def test_product_modify_type_to_non_food():
+    type_string = "non-food"
+    test_product = product.Product("test product", "food", description = "unit test product")
+    test_product.modify_type(type_string)
+    assert(test_product.get_type() == type_string), \
+        "modify_type() did not correctly modify and return non-food type"
+        
+def test_product_modify_type_to_food():
+    type_string = "food"
+    test_product = product.Product("test product", "non-food", description = "unit test product")
+    test_product.modify_type(type_string)
+    assert(test_product.get_type() == type_string), \
+        "modify_type() did not correctly modify and return food type"
+
+def test_product_modify_type_to_non_alcoholic_beverage():
+    type_string = "non-alcoholic beverage"
+    test_product = product.Product("test product", "non-food", description = "unit test product")
+    test_product.modify_type(type_string)
+    assert(test_product.get_type() == type_string), \
+        "modify_type() did not correctly modify and return non-alcoholic beverage type"
+
+def test_product_modify_type_to_alcoholic_beverage():
+    type_string = "alcoholic beverage"
+    test_product = product.Product("test product", "non-food", description = "unit test product")
+    test_product.modify_type(type_string)
+    assert(test_product.get_type() == type_string), \
+        "modify_type() did not correctly modify and return alcoholic beverage type"
+
+def product_modify_type_to_invalid():
+    # TODO
+    pass
 
 #**************************************************************************************************
 #**  PRODUCT: TESTING EXISTANCE OF DESCRIPTION FIELDS GIVEN TYPES
