@@ -1,5 +1,5 @@
 #***
-#*  GroceryDirect - Product Tests
+#*  GroceryDirect - Product API
 #*  
 #*  Author: Melanie Cornelius, mseryn
 #*  Written for CS 425-02 Fall 2016 Final Project
@@ -35,14 +35,16 @@
 import cx_Oracle
 
 # String defaults:
-default_description     = "default product description"
-default_nutrition_facts = "nutrition facts not yet set"
-default_alcohol_content = "alcohol content not yet set"
+DEFAULT_DESCRIPTION     = "default product description"
+DEFAULT_NUTRITION_FACTS = "nutrition facts not yet set"
+DEFAULT_ALCOHOL_CONTENT = "alcohol content not yet set"
 
-default_inedible_nutrition_facts = "product is not consumable and does not have nutrition facts"
-default_non_alcoholic_content    = "product is non-alcoholic and does not have alcohol content"
+DEFAULT_INEDIBLE_NUTRITION_FACTS = "product is not consumable and does not have nutrition facts"
+DEFAULT_NON_ALCOHOLIC_CONTENT    = "product is non-alcoholic and does not have alcohol content"
 
-# Store only ID; have get/modify methods interact with DB, store nothing else
+# Starting up interaction with database:
+db = cx_Oracle.connect('system', 'oracle')
+cursor = db.cursor()
 
 class Product():
 
@@ -52,11 +54,6 @@ class Product():
         cursor.execute("insert into products (name, description, ")
 
         _id = self.get_id()
-        _name = name
-        _type = self.modify_type(type_string)
-        _description = self.modify_description(description)
-        _nutrition_facts = self.modify_nutrition_facts(nutrition_facts)
-        _alcohol_content = self.modify_alcohol_content(alcohol_content)
 
         # TODO: requires functional person to test, do later
         #_price = self.get_price()
@@ -69,46 +66,77 @@ class Product():
         return self._id
 
     def get_name(self):
-        return self._name
+        cursor.execute("select name from products where id=:product_id", product_id = self._id)
+        return cursor.fetchone()
 
     def get_type(self):
-        return self._type
+        cursor.execute("select product_types.product_type 
+                        from products join product_types on products.product_type_id = product_types.id
+                        where products.id = :product_id", product_id = self._id)
+        return cursor.fetchone()
 
     def get_description(self):
-        return self._description
+        cursor.execute("select description from products where id = :product_id", product_id = self._id)
+        return cursor.fetchone()
 
     def get_nutrition_facts(self):
-        return self._nutrition_facts
+        cursor.execute("select nutrition_facts from products where id = :product_id", product_id = self._id)
+        return cursor.fetchone()
 
     def get_alcohol_content(self):
-        return self._alcohol_content
+        cursor.execute("select alcohol_content from products where id = :product_id", product_id = self._id)
+        return cursor.fetchone()
 
     # Modification Methods
 
-    def modify_type(self, modify_string):
-        pass
+    def modify_type(self, type_string):
+        # Verify it's a valid type (in the table) - selection should return nothing if type invalid
+        cursor.execute("select id from product_types where product_type = :input_type", input_type = type_string)
+        type_id = cursor.fetchone()
+        if type(type_id) == 'int':
+            cursor.execute("update products set product_type_id = :input_id", input_id = type_id)
+            db.commit()
+        # else do nothing -- possibly eventually return error here
 
     def modify_description(self, description):
         if description:
-            self._description = description
+            cursor.execute("update products set description = :new_description where id = :product_id", \
+                new_description = description, product_id = self._id)
+            db.commit()
         else:
-            self._description = default_description
+            cursor.execute("update products set description = :new_description where id = :product_id", \
+                new_description = DEFAULT_DESCRIPTION, product_id = self._id)
+            db.commit()
 
     def modify_nutrition_facts(self, nutrition_facts):
-        if (_type != "non-food"):
+        if (self.get_type() != "non-food"):
             if nutrition_facts:
-                self._nutrition_facts = nutrition_facts
+                cursor.execute("update products set nutrition_facts = :new_nutrition_facts where id = :product_id", \
+                    new_nutrition_facts = nutrition_facts, product_id = self._id)
+                db.commit()
             else:
-                self._nutrition_facts = default_nutrition_facts
+                cursor.execute("update products set nutrition_facts = :new_nutrition_facts where id = :product_id", \
+                    new_nutrition_facts = DEFAULT_NUTRITION_FACTS, product_id = self._id)
+                db.commit()
 
         else:
-            self._nutrition_facts = default_inedible_nutrition_facts 
+            cursor.execute("update products set nutrition_facts = :new_nutrition_facts where id = :product_id", \
+                new_description = DEFAULT_INEDIBLE_NUTRITION_FACTS, product_id = self._id)
+            db.commit()
 
     def modify_alcohol_content(self, alcohol_content):
-        if (_type == "alcoholic beverage"):
+        if (self.get_type() == "alcoholic beverage"):
             if alcohol_content:
-                self._alcohol_content = alcohol_content
+                cursor.execute("update products set alcohol_content = :new_alcohol_content where id = :product_id", \
+                    new_alcohol_content = alcohol_content, product_id = self._id)
+                db.commit()
             else:
-                self._alcohol_content = default_alcohol_content
+                cursor.execute("update products set alcohol_content = :new_alcohol_content where id = :product_id", \
+                    new_alcohol_content = DEFAULT_ALCOHOL_CONTENT, product_id = self._id)
+                db.commit()
         else:
-            self._alcohol_content = default_non_alcoholic_content
+            cursor.execute("update products set alcohol_content = :new_alcohol_content where id = :product_id", \
+                new_alcohol_content = DEFAULT_NON_ALCOHOLIC_CONTENT, product_id = self._id)
+            db.commit()
+
+
