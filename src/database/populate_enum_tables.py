@@ -66,5 +66,6 @@ card_types_file = open(CARD_TYPES_FILE, 'r')
 for line in card_types_file:
     cursor.execute("insert into card_types (card_type) values (:type_string)", type_string = line.strip())
 
-# closing database connection
+# committing and closing database connection
+db.commit()
 db.close()
