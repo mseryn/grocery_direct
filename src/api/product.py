@@ -48,17 +48,32 @@ cursor = db.cursor()
 
 class Product():
 
-    def __init__(self, name, type_string, description, nutrition_facts = None, alcohol_content = None):
+    def __init__(self, name, type_string, description = None, nutrition_facts = None, alcohol_content = None):
         db = cx_Oracle.connect('system', 'oracle')
         cursor = db.cursor()
-        cursor.execute("insert into products (name, description, ")
 
-        _id = self.get_id()
+        # Getting type_id from type_string, ensuring it's a valid type string (returns int ID)
+        cursor.execute("select id from product_types where product_type = :input_type", input_type = type_string)
+        type_id = cursor.fetchone()[0]
+
+
+        if type_id:
+            if type(type_id).__name__ == 'int':
+                # Adding new product to database (ONLY name and type_id) and retrieving generated product ID
+                print(type_id)
+                returned_id = cursor.var(cx_Oracle.NUMBER)
+                cursor.execute("insert into products (name, product_type_id) values (:product_name, :ptype_id) \
+                    returning id into :new_product_id", product_name = name, ptype_id = type_id, new_product_id = returned_id)
+                db.commit()
+                self._id = returned_id
+
+                # Now adding description, nutrition facts, and alcohol content (automatically generating defaults)
+                self.modify_description(description)
+                self.modify_nutrition_facts(nutrition_facts)
+                self.modify_alcohol_content(alcohol_content)
 
         # TODO: requires functional person to test, do later
         #_price = self.get_price()
-
-        # TODO: move these fields to modify_blah methods, more correct
 
     # Get Methods
 
@@ -70,8 +85,8 @@ class Product():
         return cursor.fetchone()
 
     def get_type(self):
-        cursor.execute("select product_types.product_type 
-                        from products join product_types on products.product_type_id = product_types.id
+        cursor.execute("select product_types.product_type \
+                        from products join product_types on products.product_type_id = product_types.id \
                         where products.id = :product_id", product_id = self._id)
         return cursor.fetchone()
 
@@ -88,6 +103,12 @@ class Product():
         return cursor.fetchone()
 
     # Modification Methods
+
+    def modify_name(self, new_name):
+        if new_name:
+            cursor.execute("update products set name = :name_string where id = :product_id", name_string = new_name, \
+                product_id = self.get_id())
+        db.commit()
 
     def modify_type(self, type_string):
         # Verify it's a valid type (in the table) - selection should return nothing if type invalid

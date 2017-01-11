@@ -29,36 +29,38 @@
 #*      -- alcohol content
 #***
 
+import product
+
 #**************************************************************************************************
 #**  PRODUCT: TESTING NAME 
 #**************************************************************************************************
 
-def product_get_id():
+def test_product_get_id():
     # successfully retrieve product ID using get_id()
-    product = product.Product("test product", "non-food", description = "unit test product")
-    assert(product.get_id() == 1), "get_id() did not return correct product ID"
+    test_product = product.Product("test product", "non-food", description = "unit test product")
+    assert(test_product.get_id() == test_product._id), "get_id() did not return correct product ID"
     
 
 #**************************************************************************************************
 #**  PRODUCT: TESTING NAME 
 #**************************************************************************************************
 
-def product_get_name():
+def test_product_get_name():
     # successfully retrieve name using get_name()
-    product = product.Product("test product", "non-food", description = "unit test product")
-    assert(product.get_name() == "test product"), "get_name did not return correct product name"
+    test_product = product.Product("test product", "non-food", description = "unit test product")
+    assert(test_product.get_name() == "test product"), "get_name did not return correct product name"
 
-def product_modify_name():
+def test_product_modify_name():
     # successfully modify product name
-    product = product.Product("test product", "non-food", description = "unit test product")
-    product.modify_name("new name")
-    assert(product._name == "new name"), "modify_name did not modify product name"
+    test_product = product.Product("test product", "non-food", description = "unit test product")
+    test_product.modify_name("new name")
+    assert(test_product.get_name() == "new name"), "modify_name did not modify product name"
 
-def product_modify_name_null():
+def test_product_modify_name_null():
     # unsuccessfully modify product name with null value
-    product = product.Product("test product", "non-food", description = "unit test product")
-    product.modify_name(None)
-    assert(product._name == "test product"), \
+    test_product = product.Product("test product", "non-food", description = "unit test product")
+    test_product.modify_name(None)
+    assert(test_product.get_name() == "test product"), \
         "modify_name did not behave correctly when give None product name"
 
 
