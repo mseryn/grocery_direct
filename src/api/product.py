@@ -82,7 +82,8 @@ class Product():
 
     def get_name(self):
         cursor.execute("select name from products where id=:product_id", product_id = self._id)
-        return cursor.fetchone()
+        name =  cursor.fetchone()[0]
+        return name
 
     def get_type(self):
         cursor.execute("select product_types.product_type \
