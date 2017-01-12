@@ -383,7 +383,7 @@ def test_product_modify_price_new_state():
     # successfully modify price of product in previously unlisted state 
     test_product = product.Product("test product", "non-food")
     test_product.modify_price_per_state("MO", 15)
-    assert(test_product.get_price_per_state("MO") == 15, \
+    assert(test_product.get_price_per_state("MO") == 15), \
         "modify_price failed to add new state/price for product"
 
 def test_product_modify_price_overwrite_existing_state():
@@ -391,14 +391,14 @@ def test_product_modify_price_overwrite_existing_state():
     test_product = product.Product("test product", "non-food")
     test_product.modify_price_per_state("MO", 1)
     test_product.modify_price_per_state("MO", 15)
-    assert(test_product.get_price_per_state("MO") == 15, \
+    assert(test_product.get_price_per_state("MO") == 15), \
         "modify_price failed to overwrite existing state/price for product"
 
 def test_product_get_price():
     # successfully retrieve price of valid state
     test_product = product.Product("test product", "non-food")
     test_product.modify_price_per_state("MO", 15)
-    assert(test_product.get_price_per_state("MO") == 15, \
+    assert(test_product.get_price_per_state("MO") == 15), \
         "get_price failed to retrieve price for product"
 
 def test_product_get_unlisted_price():
@@ -410,8 +410,8 @@ def test_product_get_unlisted_price():
 def test_product_get_price_invalid_state():
     # successfully return from attempt to use invalid state code
     test_product = product.Product("test product", "non-food")
-    test_product.modify_price_per_state("LL")
-    assert(test_product.get_price_per_state("LL") == None, \
+    test_product.modify_price_per_state("LL", 100)
+    assert(test_product.get_price_per_state("LL") == None), \
         "get_price failed to return None for invalid state code for product"
 
 #**************************************************************************************************
