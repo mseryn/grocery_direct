@@ -116,9 +116,12 @@ class Product():
         # Verify it's a valid type (in the table) - selection should return nothing if type invalid
         cursor.execute("select id from product_types where product_type = :input_type", input_type = type_string)
         type_id = cursor.fetchone()[0]
-        if type(type_id) == 'int':
-            cursor.execute("update products set product_type_id = :input_id", input_id = type_id)
+        if type(type_id).__name__ == 'int':
+            cursor.execute("update products set product_type_id = :input_id where id = :product_id", \
+                input_id = type_id, product_id = self.get_id())
             db.commit()
+            self.modify_nutrition_facts(None)
+            self.modify_alcohol_content(None)
         # else do nothing -- possibly eventually return error here
 
     def modify_description(self, input_description):

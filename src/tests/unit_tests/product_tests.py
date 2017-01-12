@@ -103,6 +103,7 @@ def test_product_modify_type_to_non_food():
     type_string = "non-food"
     test_product = product.Product("test product", "food", description = "unit test product")
     test_product.modify_type(type_string)
+    print test_product.get_type()
     assert(test_product.get_type() == type_string), \
         "modify_type() did not correctly modify and return non-food type"
         
