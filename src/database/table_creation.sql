@@ -81,11 +81,10 @@ create table addresses
     city            varchar(255) not null,
     zip_code        integer not null,
     state_code_id   integer not null,
-    address_type    integer not null,
+    address_type_id integer not null,
     constraint      state_code_fk   foreign key (state_code_id) references state_codes(id),
-    constraint      address_type_fk foreign key (address_type)  references address_types(id)
+    constraint      address_type_fk foreign key (address_type_id)  references address_types(id)
 );
-
 
 create table orders
 (
@@ -156,14 +155,17 @@ create table products
 (
     id              integer generated always as identity primary key,
     name            varchar(20) not null,
+    product_size    number not null,
     description     varchar(255),
     nutrition_facts varchar(255),
     alcohol_content varchar(255),
     product_type_id integer,
     image_id        integer,
-    constraint      product_type_fk foreign key (product_type_id) references product_types(id),
-    constraint      image_fk        foreign key (image_id)        references product_images(id)
+    constraint      product_type_fk foreign key (product_type_id) references product_types(id)
 );
+/*
+    constraint      image_fk        foreign key (image_id)        references product_images(id)
+*/
 
 create table warehouses
 (
@@ -191,8 +193,10 @@ create table warehouse_to_product
 (
     warehouse_id    integer,
     product_id      integer,
+    quantity        integer default 1,
     constraint warehouse_to_product_fk foreign key (warehouse_id) references warehouses(id),
-    constraint product_to_warehouse_fk foreign key (product_id)   references products(id)
+    constraint product_to_warehouse_fk foreign key (product_id)   references products(id),
+    constraint product_quantity_check  check (quantity > 0)
 );
 
 create table state_code_to_product
@@ -201,7 +205,8 @@ create table state_code_to_product
     product_id      integer,
     state_price     numeric(8, 2) not null,
     constraint state_code_to_product_fk  foreign key (state_id)   references state_codes(id),
-    constraint product_to_state_fk  foreign key (product_id) references products(id)
+    constraint product_to_state_fk  foreign key (product_id) references products(id),
+    constraint product_price_check check (state_price > 0)
 );
 
 create table supplier_to_product
