@@ -29,6 +29,8 @@
 #*      -- type
 #***
 
+###################################################################################################
+
 import cx_Oracle
 
 # Starting up interaction with database:
@@ -37,15 +39,18 @@ cursor = db.cursor()
 
 class Product():
 
-    def __init__(self, name, type_string, description = None, nutrition_facts = None, alcohol_content = None, size = 1):
+    def __init__(self, street, city, state_string, zip_code, type_string, apt_no = None):
+    
         db = cx_Oracle.connect('system', 'oracle')
         cursor = db.cursor()
 
-        # Getting type_id from type_string, ensuring it's a valid type string (returns int ID)
+        # Getting type_id from type_string
         cursor.execute("select id from product_types where product_type = :input_type", input_type = type_string)
         type_id = cursor.fetchone()[0]
 
+        # Getting state_id from state_string
 
+        # Ensuring both state and type IDs are ints
         if type_id:
             if type(type_id).__name__ == 'int':
                 # Adding new product to database (ONLY name and type_id) and retrieving generated product ID
@@ -56,14 +61,6 @@ class Product():
                     ptype_id = type_id, new_product_id = returned_id, psize = size)
                 db.commit()
                 self._id = returned_id
-
-                # Now adding description, nutrition facts, and alcohol content (automatically generating defaults)
-                self.modify_description(description)
-                self.modify_nutrition_facts(nutrition_facts)
-                self.modify_alcohol_content(alcohol_content)
-
-        # TODO: requires functional person to test, do later
-        #_price = self.get_price()
 
     # Get Methods
 
