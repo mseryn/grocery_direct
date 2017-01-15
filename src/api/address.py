@@ -45,159 +45,143 @@ class Product():
         cursor = db.cursor()
 
         # Getting type_id from type_string
-        cursor.execute("select id from product_types where product_type = :input_type", input_type = type_string)
+        cursor.execute("select id from address_types where address = :input_type", \
+            input_type = type_string)
         type_id = cursor.fetchone()[0]
 
         # Getting state_id from state_string
+        cursor.execute("select id from state_codes where state_code = :input_state", \
+            input_state = state_string)
+        type_id = cursor.fetchone()[0]
 
-        # Ensuring both state and type IDs are ints
-        if type_id:
-            if type(type_id).__name__ == 'int':
-                # Adding new product to database (ONLY name and type_id) and retrieving generated product ID
-                print(type_id)
+        # Ensuring both state and type IDs exist and are ints
+        if type_id and state_id:
+            if isinstance(type_id, int) and isinstance(state_id, int):
                 returned_id = cursor.var(cx_Oracle.NUMBER)
-                cursor.execute("insert into products (name, product_type_id, product_size) values \
-                    (:product_name, :ptype_id, :psize) returning id into :new_product_id", product_name = name, \
-                    ptype_id = type_id, new_product_id = returned_id, psize = size)
+                cursor.execute("insert into addresses \
+                    (street, apartment_no, city, zip_code, state_code_id, address_type_id) \
+                    values (:input_street, :input_apt, :input_city, :input_zip, :input_state, \
+                    :input_type) \
+                    returning id into new_address_id", \
+                    input_street = street, input_apt = apt_no, input_city = city, \
+                    input_zip = zip_code, input_state = state_id, input_type = type_id, \
+                    new_address_id = returned_id)
                 db.commit()
                 self._id = returned_id
+       else:
+           print("Input type and/or state did not return against DB. \
+                \nType string: %s \nState string: %s", %(type_string, state_string))
 
     # Get Methods
 
     def get_id(self):
         return self._id
 
-    def get_name(self):
-        cursor.execute("select name from products where id=:product_id", product_id = self._id)
-        name =  cursor.fetchone()[0]
-        return name
+    def get_street(self):
+        cursor.execute("select street from addresses where id = :address_id", \
+                        address_id = self.get_id())
+        return cursor.fetchone()[0]
+
+    def get_apartment_no(self):
+        cursor.execute("select apartment_no from addresses where id = :address_id", \
+                        address_id = self.get_id())
+        returned_apt_no = cursor.fetchone()
+        if returned_apt_no:
+            return returned_apt_no[0]
+        else:
+            return None
+    
+    def get_city(self):
+        cursor.execute("select city from addresses where id = :address_id", \
+                        address_id = self.get_id())
+        return cursor.fetchone()[0]
+    
+    def get_zip_code(self):
+        cursor.execute("select zip_code from addresses where id = :address_id", \
+                        address_id = self.get_id())
+        return cursor.fetchone()[0]
+    
+    def get_state(self):
+        # Returns state string not state ID
+        cursor.execute("select state_codes.state_code \
+                        from state_codes join addresses on state_codes.id = addresses.state_code_id \
+                        where addresses.id = :address_id", \
+                        address_id = self.get_id())
+        return cursor.fetchone()[0]
 
     def get_type(self):
-        # Returns string of product type -- not type_id
-        cursor.execute("select product_types.product_type \
-                        from products join product_types on products.product_type_id = product_types.id \
-                        where products.id = :product_id", product_id = self._id)
+        # Returns address type in string form not by ID
+        cursor.execute("select address_types.address_type \
+                        from address_types join addresses \
+                        on address_types.id = addresses.address_type_id \
+                        where addresses.id = :address_id", \
+                        address_id = self.get_id())
         return cursor.fetchone()[0]
 
-    def get_description(self):
-        cursor.execute("select description from products where id = :product_id", product_id = self._id)
-        return cursor.fetchone()[0]
-
-    def get_nutrition_facts(self):
-        cursor.execute("select nutrition_facts from products where id = :product_id", product_id = self._id)
-        return cursor.fetchone()[0]
-
-    def get_alcohol_content(self):
-        cursor.execute("select alcohol_content from products where id = :product_id", product_id = self._id)
-        return cursor.fetchone()[0]
-
-    def get_price_per_state(self, state_code):
-        # First must ensure state code in state code table
-        cursor.execute("select id from state_codes where state_code = :input_code", input_code = state_code)
-        state_id = cursor.fetchone()
-        if state_id:
-            state_id = state_id[0]
-            # Then must look at state-to-product table, see if price listed
-            cursor.execute("select state_price from state_code_to_product where product_id = :p_id and state_id = :s_id", \
-                p_id = self.get_id(), s_id = state_id)
-            price = cursor.fetchone()
-            # If yes to both above conditions, return a price (ensuring it's a valid price), otherwise return -1.0 (sentianl)
-            if price:
-                return price[0]
-            else:
-                return -1
-
-    def get_size(self):
-        cursor.execute("select product_size from products where id = :product_id", product_id = self._id)
-        return cursor.fetchone()[0]
 
     # Modification Methods
 
-    def modify_name(self, new_name):
-        if new_name:
-            cursor.execute("update products set name = :name_string where id = :product_id", name_string = new_name, \
-                product_id = self.get_id())
+    def modify_street(self, new_street):
+        cursor.execute("update addresses \
+                        set street = :input_street \
+                        where id = :address_id",
+                        input_street = new_street, address_id = self.get_id())
         db.commit()
 
-    def modify_type(self, type_string):
-        # Verify it's a valid type (in the table) - selection should return nothing if type invalid
-        cursor.execute("select id from product_types where product_type = :input_type", input_type = type_string)
-        type_id = cursor.fetchone()[0]
-        if type(type_id).__name__ == 'int':
-            cursor.execute("update products set product_type_id = :input_id where id = :product_id", \
-                input_id = type_id, product_id = self.get_id())
+    def modify_apartment_no(self, new_apt):
+        if new_apt:
+            cursor.execute("update addresses \
+                            set apartment_no = :input_apt \
+                            where id = :address_id",
+                            input_apt = new_apt, address_id = self.get_id())
             db.commit()
-            self.modify_nutrition_facts(None)
-            self.modify_alcohol_content(None)
-        # else do nothing -- possibly eventually return error here
-
-    def modify_description(self, input_description):
-        if input_description:
-            cursor.execute("update products set description = :new_description where id = :product_id", \
-                new_description = input_description, product_id = self._id)
-            db.commit()
-        else:
-            cursor.execute("update products set description = :new_description where id = :product_id", \
-                new_description = DEFAULT_DESCRIPTION, product_id = self._id)
-            db.commit()
-
-    def modify_nutrition_facts(self, input_nutrition_facts):
-        if (self.get_type() == "non-food"):
-            cursor.execute("update products set nutrition_facts = :new_nutrition_facts where id = :product_id", \
-                new_nutrition_facts = DEFAULT_INEDIBLE_NUTRITION_FACTS, product_id = self._id)
+    
+    def modify_city(self, new_city):
+        cursor.execute("update addresses \
+                        set city = :input_city \
+                        where id = :address_id",
+                        input_city = new_city, address_id = self.get_id())
+        db.commit()
+    
+    def modify_zip_code(self, new_zip):
+        if isinstance(new_zip, int) and new_zip >= 0 and new_zip < 100000:
+            cursor.execute("update addresses \
+                            set zip_code = :input_zip \
+                            where id = :address_id", \
+                            input_zip = new_zip, address_id = self.get_id())
             db.commit()
         else:
-            if input_nutrition_facts:
-                cursor.execute("update products set nutrition_facts = :new_nutrition_facts where id = :product_id", \
-                    new_nutrition_facts = input_nutrition_facts, product_id = self._id)
-                db.commit()
-            else:
-                cursor.execute("update products set nutrition_facts = :new_nutrition_facts where id = :product_id", \
-                    new_nutrition_facts = DEFAULT_NUTRITION_FACTS, product_id = self._id)
-                db.commit()
+            print("Zip code must be a positive 5-digit int. \nInput zip: %i", %(new_zip))
 
-
-    def modify_alcohol_content(self, alcohol_content):
-        if (self.get_type() == "alcoholic beverage"):
-            if alcohol_content:
-                cursor.execute("update products set alcohol_content = :new_alcohol_content where id = :product_id", \
-                    new_alcohol_content = alcohol_content, product_id = self._id)
-                db.commit()
-            else:
-                cursor.execute("update products set alcohol_content = :new_alcohol_content where id = :product_id", \
-                    new_alcohol_content = DEFAULT_ALCOHOL_CONTENT, product_id = self._id)
-                db.commit()
-        else:
-            cursor.execute("update products set alcohol_content = :new_alcohol_content where id = :product_id", \
-                new_alcohol_content = DEFAULT_NON_ALCOHOLIC_CONTENT, product_id = self._id)
-            db.commit()
-
-    def modify_price_per_state(self, state_code, new_price):
-        # First must ensure state code in state code table
-        cursor.execute("select id from state_codes where state_code = :input_code", input_code = state_code)
+    def modify_state(self, new_state):
+        cursor.execute("select id from state_codes where state_code = :input_state", \
+                        input_state = new_state)
         state_id = cursor.fetchone()
         if state_id:
             state_id = state_id[0]
-            # Ensure price is number and is positive:
-            if isinstance(new_price, (int, float, long)) and new_price >= 0:
-                # Then must look at state-to-product table, see if price listed
-                cursor.execute("select state_price from state_code_to_product where product_id = :p_id and state_id = :s_id", \
-                    p_id = self.get_id(), s_id = state_id)
-                old_price = cursor.fetchone()
-                if old_price:
-                    # Existing state price overwrite:
-                    cursor.execute("update state_code_to_product set state_price = :input_price where product_id = :p_id and state_id = :s_id", \
-                        input_price = new_price, p_id = self.get_id(), s_id = state_id)
-                    db.commit()
-                else:
-                    # New state price, new row:
-                    cursor.execute("insert into state_code_to_product (state_id, product_id, state_price) \
-                        values (:s_id, :p_id, :price)", s_id = state_id, p_id = self.get_id(), price = new_price)
-                    db.commit()
-
-    def modify_size(self, new_size):
-        # ensuring it's a number:
-        if isinstance(new_size, (int, float, long)):
-            cursor.execute("update products set product_size = :psize where id = :product_id", \
-                psize = new_size, product_id = self.get_id())
+        if isinstance(state_id, int):
+            cursor.execute("update addresses \
+                            set state_code_id = :input_state \
+                            where id = :address_id", \
+                            input_state = state_id, address_id = self.get_id())
             db.commit()
+        else:
+            print("State code given not found in list of state codes. \nState given: %s", \
+                %(new_state))
+    
+    def modify_type(self, new_type):
+        # Verify it's a valid type (in the table) - selection should return nothing if type invalid
+        cursor.execute("select id from address_types where address_type = :input_type", \
+                        input_type = new_type)
+        type_id = cursor.fetchone()
+        if type_id:
+            type_id = type_id[0]
+        if isinstance(type_id, int):
+            cursor.execute("update addresses \
+                            set address_type_id = :input_type \
+                            where id = :address_id", \
+                            input_type = type_id, address_id = self.get_id())
+            db.commit()
+        else:
+            print("Address type not found in list of address types. \nType given: %s", \
+                %(new_type))
