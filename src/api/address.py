@@ -38,53 +38,19 @@ cursor = db.cursor()
 
 class Address():
 
-    def __init__(self, street, city, state_string, zip_code, type_string, apt_no = None):
-    
-        db = cx_Oracle.connect('system', 'oracle')
-        cursor = db.cursor()
+    def __init__(self, given_id):
+        # Ensuring given ID is int
+        if isinstance(given_id, int):
+            # Ensuring warehouse ID is in warehouses table
+            cursor.execute("select id from addresses where id = :address_id", address_id = given_id)
+            if cursor.fetchone():
+                self._id = given_id
 
-        # Getting type_id from type_string
-        cursor.execute("select id from address_types where address_type = :input_type", \
-            input_type = type_string)
-        type_id = cursor.fetchone()
-
-        # Getting state_id from state_string
-        cursor.execute("select id from state_codes where state_code = :input_state", \
-            input_state = state_string)
-        state_id = cursor.fetchone()
-
-        # Ensuring both state and type IDs exist and are ints
-        if type_id and state_id:
-            type_id = type_id[0]
-            state_id = state_id[0]
-            if isinstance(type_id, int) and isinstance(state_id, int):
-                returned_id = cursor.var(cx_Oracle.NUMBER)
-
-                # If apartment_no specified, use first statement. Otherwise, use second.
-                if apt_no:
-                    cursor.execute("insert into addresses \
-                        (street, apartment_no, city, zip_code, state_code_id, address_type_id) \
-                        values (:input_street, :input_apt, :input_city, :input_zip, :input_state, \
-                        :input_type) \
-                        returning id into :new_address_id", \
-                        input_street = street, input_apt = apt_no, input_city = city, \
-                        input_zip = zip_code, input_state = state_id, input_type = type_id, \
-                        new_address_id = returned_id)
-                else:
-                    cursor.execute("insert into addresses \
-                        (street, city, zip_code, state_code_id, address_type_id) \
-                        values (:input_street, :input_city, :input_zip, :input_state, :input_type) \
-                        returning id into :new_address_id", \
-                        input_street = street, input_city = city, \
-                        input_zip = zip_code, input_state = state_id, input_type = type_id, \
-                        new_address_id = returned_id)
-
-                # Committing changes to DB and collecting return variable
-                db.commit()
-                self._id = returned_id
+            else:
+                print("Given ID not in addresses table, id: %i" %given_id)
         else:
-            print("Input type and/or state did not return against DB. \
-                \nType string: %s \nState string: %s" %(type_string, state_string))
+            print("Given ID not an int, id: %s" %str(given_id))
+    
 
     # Get Methods
 
@@ -158,7 +124,7 @@ class Address():
         db.commit()
     
     def modify_zip_code(self, new_zip):
-        if isinstance(new_zip, int) and new_zip >= 0 and new_zip < 100000:
+        if isinstance(new_zip, int) and new_zip >= 0 and new_zip <= 99999:
             cursor.execute("update addresses \
                             set zip_code = :input_zip \
                             where id = :address_id", \
@@ -200,3 +166,54 @@ class Address():
         else:
             print("Address type not found in list of address types. \nType given: %s" \
                 %(new_type))
+
+    @staticmethod
+    def new_address(street, city, state_string, zip_code, type_string, apt_no = None):
+        # Inserts a new address into the database
+        # Returns Address reference to new address
+
+        # Getting type_id from type_string
+        cursor.execute("select id from address_types where address_type = :input_type", \
+            input_type = type_string)
+        type_id = cursor.fetchone()
+
+        # Getting state_id from state_string
+        cursor.execute("select id from state_codes where state_code = :input_state", \
+            input_state = state_string)
+        state_id = cursor.fetchone()
+
+        # Ensuring both state and type IDs exist and are ints
+        if type_id and state_id:
+            type_id = type_id[0]
+            state_id = state_id[0]
+            if isinstance(type_id, int) and isinstance(state_id, int):
+                # Making a variable to hold ID of new address
+                returned_id = cursor.var(cx_Oracle.NUMBER)
+
+                # If apartment_no specified, use first statement. Otherwise, use second.
+                if apt_no:
+                    cursor.execute("insert into addresses \
+                        (street, apartment_no, city, zip_code, state_code_id, address_type_id) \
+                        values (:input_street, :input_apt, :input_city, :input_zip, :input_state, \
+                        :input_type) \
+                        returning id into :new_address_id", \
+                        input_street = street, input_apt = apt_no, input_city = city, \
+                        input_zip = zip_code, input_state = state_id, input_type = type_id, \
+                        new_address_id = returned_id)
+                else:
+                    cursor.execute("insert into addresses \
+                        (street, city, zip_code, state_code_id, address_type_id) \
+                        values (:input_street, :input_city, :input_zip, :input_state, :input_type) \
+                        returning id into :new_address_id", \
+                        input_street = street, input_city = city, \
+                        input_zip = zip_code, input_state = state_id, input_type = type_id, \
+                        new_address_id = returned_id)
+
+                # Committing changes to DB and collecting return variable
+                db.commit()
+                return Address(int(returned_id.getvalue()))
+        else:
+            print("Input type and/or state did not return against DB. \
+                \nType string: %s \nState string: %s" %(type_string, state_string))
+
+

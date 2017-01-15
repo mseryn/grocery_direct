@@ -44,14 +44,14 @@ TEST_TYPE_STRING    = "shipping"
 #**************************************************************************************************
 
 def test_address_get_street():
-    test_address = address.Address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
     assert(test_address.get_street() == TEST_STREET), \
         "get_street() did not return street name for address"
 
 def test_address_modify_street():
     new_street_string = "321 New Test Street"
-    test_address = address.Address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
     test_address.modify_street(new_street_string)
     assert(test_address.get_street() == new_street_string), \
@@ -62,19 +62,19 @@ def test_address_modify_street():
 #**************************************************************************************************
 
 def test_address_get_apt():
-    test_address = address.Address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING, apt_no = TEST_APT_NO)
     assert(test_address.get_apartment_no() == TEST_APT_NO), \
         "get_apartment_no() did not return apartment no. line for address"
 
 def test_address_get_apt_none():
-    test_address = address.Address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
     assert(test_address.get_apartment_no() == None), \
         "get_apartment_no() did not return None for nonexistant apartment no. line for address"
 
 def test_address_modify_apt():
-    test_address = address.Address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
     test_address.modify_apartment_no(TEST_APT_NO)
     assert(test_address.get_apartment_no() == TEST_APT_NO), \
@@ -85,13 +85,13 @@ def test_address_modify_apt():
 #**************************************************************************************************
 
 def test_address_get_city():
-    test_address = address.Address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
     assert(test_address.get_city() == TEST_CITY), "get_city() did not return city for address"
 
 def test_address_modify_city():
     new_city_string = "New Test City"
-    test_address = address.Address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
     test_address.modify_city(new_city_string)
     assert(test_address.get_city() == new_city_string), \
@@ -102,14 +102,14 @@ def test_address_modify_city():
 #**************************************************************************************************
 
 def test_address_get_zip_code():
-    test_address = address.Address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
     assert(test_address.get_zip_code() == TEST_ZIP_CODE), \
         "get_zip_code() did not return zipcode for address"
 
 def test_address_modify_zip_code():
     new_zipcode = 99999
-    test_address = address.Address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
     test_address.modify_zip_code(new_zipcode)
     assert(test_address.get_zip_code() == new_zipcode), \
@@ -117,7 +117,7 @@ def test_address_modify_zip_code():
 
 def test_address_modify_zip_invalid_type():
     new_zipcode = "invalid string"
-    test_address = address.Address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
     test_address.modify_zip_code(new_zipcode)
     assert(test_address.get_zip_code() == TEST_ZIP_CODE), \
@@ -125,7 +125,7 @@ def test_address_modify_zip_invalid_type():
 
 def test_address_modify_zip_invalid_number():
     new_zipcode = 999999
-    test_address = address.Address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
     test_address.modify_zip_code(new_zipcode)
     assert(test_address.get_zip_code() == TEST_ZIP_CODE), \
@@ -137,14 +137,14 @@ def test_address_modify_zip_invalid_number():
 #**************************************************************************************************
 
 def test_address_get_state():
-    test_address = address.Address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
     assert(test_address.get_state() == TEST_STATE_CODE), \
         "get_state() did not return state for address"
 
 def test_address_modify_state():
     new_state_code = "MN"
-    test_address = address.Address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
     test_address.modify_state(new_state_code)
     assert(test_address.get_state() == new_state_code), \
@@ -152,7 +152,7 @@ def test_address_modify_state():
 
 def test_address_modify_state_invalid():
     new_state_code = "LL"
-    test_address = address.Address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
     test_address.modify_state(new_state_code)
     assert(test_address.get_state() == TEST_STATE_CODE), \
@@ -164,14 +164,14 @@ def test_address_modify_state_invalid():
 #**************************************************************************************************
 
 def test_address_get_type():
-    test_address = address.Address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
     assert(test_address.get_type() == TEST_TYPE_STRING), \
         "get_type() did not return type for address"
 
 def test_address_modify_type_to_warehouse():
     new_type_string = "warehouse"
-    test_address = address.Address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
     test_address.modify_type(new_type_string)
     assert(test_address.get_type() == new_type_string), \
@@ -180,7 +180,7 @@ def test_address_modify_type_to_warehouse():
 
 def test_address_modify_type_to_billing():
     new_type_string = "billing"
-    test_address = address.Address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
     test_address.modify_type(new_type_string)
     assert(test_address.get_type() == new_type_string), \
@@ -189,7 +189,7 @@ def test_address_modify_type_to_billing():
 
 def test_address_modify_type_to_supplier():
     new_type_string = "supplier"
-    test_address = address.Address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
     test_address.modify_type(new_type_string)
     assert(test_address.get_type() == new_type_string), \
@@ -198,7 +198,7 @@ def test_address_modify_type_to_supplier():
 
 def test_address_modify_type_invalid():
     new_type_string = "invalid string"
-    test_address = address.Address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
     test_address.modify_type(new_type_string)
     assert(test_address.get_type() == TEST_TYPE_STRING), \
