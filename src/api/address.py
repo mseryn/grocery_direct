@@ -29,7 +29,6 @@
 #*      -- type
 #***
 
-###################################################################################################
 
 import cx_Oracle
 
@@ -54,13 +53,10 @@ class Address():
             input_state = state_string)
         state_id = cursor.fetchone()
 
-
-
         # Ensuring both state and type IDs exist and are ints
         if type_id and state_id:
             type_id = type_id[0]
             state_id = state_id[0]
-            print("type: %i \nstate: %i" %(type_id, state_id))
             if isinstance(type_id, int) and isinstance(state_id, int):
                 returned_id = cursor.var(cx_Oracle.NUMBER)
 
