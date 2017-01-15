@@ -37,7 +37,7 @@ import cx_Oracle
 db = cx_Oracle.connect('system', 'oracle')
 cursor = db.cursor()
 
-class Product():
+class Address():
 
     def __init__(self, street, city, state_string, zip_code, type_string, apt_no = None):
     
@@ -45,32 +45,50 @@ class Product():
         cursor = db.cursor()
 
         # Getting type_id from type_string
-        cursor.execute("select id from address_types where address = :input_type", \
+        cursor.execute("select id from address_types where address_type = :input_type", \
             input_type = type_string)
-        type_id = cursor.fetchone()[0]
+        type_id = cursor.fetchone()
 
         # Getting state_id from state_string
         cursor.execute("select id from state_codes where state_code = :input_state", \
             input_state = state_string)
-        type_id = cursor.fetchone()[0]
+        state_id = cursor.fetchone()
+
+
 
         # Ensuring both state and type IDs exist and are ints
         if type_id and state_id:
+            type_id = type_id[0]
+            state_id = state_id[0]
+            print("type: %i \nstate: %i" %(type_id, state_id))
             if isinstance(type_id, int) and isinstance(state_id, int):
                 returned_id = cursor.var(cx_Oracle.NUMBER)
-                cursor.execute("insert into addresses \
-                    (street, apartment_no, city, zip_code, state_code_id, address_type_id) \
-                    values (:input_street, :input_apt, :input_city, :input_zip, :input_state, \
-                    :input_type) \
-                    returning id into new_address_id", \
-                    input_street = street, input_apt = apt_no, input_city = city, \
-                    input_zip = zip_code, input_state = state_id, input_type = type_id, \
-                    new_address_id = returned_id)
+
+                # If apartment_no specified, use first statement. Otherwise, use second.
+                if apt_no:
+                    cursor.execute("insert into addresses \
+                        (street, apartment_no, city, zip_code, state_code_id, address_type_id) \
+                        values (:input_street, :input_apt, :input_city, :input_zip, :input_state, \
+                        :input_type) \
+                        returning id into :new_address_id", \
+                        input_street = street, input_apt = apt_no, input_city = city, \
+                        input_zip = zip_code, input_state = state_id, input_type = type_id, \
+                        new_address_id = returned_id)
+                else:
+                    cursor.execute("insert into addresses \
+                        (street, city, zip_code, state_code_id, address_type_id) \
+                        values (:input_street, :input_city, :input_zip, :input_state, :input_type) \
+                        returning id into :new_address_id", \
+                        input_street = street, input_city = city, \
+                        input_zip = zip_code, input_state = state_id, input_type = type_id, \
+                        new_address_id = returned_id)
+
+                # Committing changes to DB and collecting return variable
                 db.commit()
                 self._id = returned_id
-       else:
-           print("Input type and/or state did not return against DB. \
-                \nType string: %s \nState string: %s", %(type_string, state_string))
+        else:
+            print("Input type and/or state did not return against DB. \
+                \nType string: %s \nState string: %s" %(type_string, state_string))
 
     # Get Methods
 
@@ -151,7 +169,8 @@ class Product():
                             input_zip = new_zip, address_id = self.get_id())
             db.commit()
         else:
-            print("Zip code must be a positive 5-digit int. \nInput zip: %i", %(new_zip))
+            print("Zip code must be a positive 5-digit int. \
+                \nInput zip: %s \nInput type: %s" %(str(new_zip), type(new_zip).__name__))
 
     def modify_state(self, new_state):
         cursor.execute("select id from state_codes where state_code = :input_state", \
@@ -166,7 +185,7 @@ class Product():
                             input_state = state_id, address_id = self.get_id())
             db.commit()
         else:
-            print("State code given not found in list of state codes. \nState given: %s", \
+            print("State code given not found in list of state codes. \nState given: %s" \
                 %(new_state))
     
     def modify_type(self, new_type):
@@ -183,5 +202,5 @@ class Product():
                             input_type = type_id, address_id = self.get_id())
             db.commit()
         else:
-            print("Address type not found in list of address types. \nType given: %s", \
+            print("Address type not found in list of address types. \nType given: %s" \
                 %(new_type))
