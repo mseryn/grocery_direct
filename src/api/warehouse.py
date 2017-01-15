@@ -27,14 +27,25 @@ import cx_Oracle
 db = cx_Oracle.connect('system', 'oracle')
 cursor = db.cursor()
 
-class Warehouset():
+class Warehouse():
 
-    def __init__(self, capacity, street, city, state_string, zip_code, apartment_no = None):
-        db = cx_Oracle.connect('system', 'oracle')
-        cursor = db.cursor()
+    def __init__(self, given_id):
+        # Ensuring given ID is int
+        if isinstance(given_id, int):
+            # Ensuring warehouse ID is in warehouses table
+            cursor.execute("select id from warehouses where id = :warehouse_id", warehouse_id = given_id)
+            if cursor.fetchone():
+                self._id = given_id
+            else:
+                print("Given ID not in warehouses table, id: %i" %given_id)
+        else:
+            print("Given ID not an int, id: %s" %str(given_id))
 
-        warehouse_address = address.Address(street, city, state_string, zip_code, "warehouse", \
-                                            apt_no = apartment_no)
+    @staticmethod
+    def new_warehouse(capacity, street, city, state_string, zip_code, apartment_no = None):
+        # Adding new warehouse to database, and returning reference to that warehouse
+        warehouse_address = address.Address.new_address(street, city, state_string, zip_code,\
+            "warehouse", apt_no = apartment_no)
         address_id = warehouse_address.get_id()
 
         if isinstance(capacity, (int, float)):
@@ -47,7 +58,9 @@ class Warehouset():
                             new_warehouse_id = returned_id)
             db.commit()
 
-        _id = returned_id
+        returned_id = int(returned_id.getvalue())
+
+        return Warehouse(returned_id)
 
     # Get Methods
 
@@ -69,7 +82,7 @@ class Warehouset():
         address = self.get_address_reference()
         return address.get_street()
 
-    def get_apartment_no(self)
+    def get_apartment_no(self):
         address = self.get_address_reference()
         return address.get_apartment_no()
 
@@ -89,11 +102,12 @@ class Warehouset():
 
     def modify_capacity(self, new_capacity):
         if isinstance(new_capacity, (int, float)):
-            # Ensuring new capacity is >= remaining capacity -- TODO
-            cursor.execute("update warehouses set capacity = :input_capacity \
-                            where id = :warehouse_id", input_capacity = int(new_capacity), \
-                            warehouse_id = self.get_id())
-            db.commit()
+            if new_capacity >=0:
+                # Ensuring new capacity is >= remaining capacity -- TODO
+                cursor.execute("update warehouses set capacity = :input_capacity \
+                                where id = :warehouse_id", input_capacity = int(new_capacity), \
+                                warehouse_id = self.get_id())
+                db.commit()
         else:
             print("New capacity must be integer \nInput capacity: %s" %(str(new_capacity)))
 
@@ -103,7 +117,7 @@ class Warehouset():
 
     def modify_apartment_no(self, new_apt):
         address = self.get_address_reference()
-        address.modify_apartment_no(self, new_apt)
+        address.modify_apartment_no(new_apt)
 
     def modify_city(self, new_city):
         address = self.get_address_reference()
@@ -124,20 +138,7 @@ class Warehouset():
                         warehouse_id = self.get_id())
         returned_id = cursor.fetchone()
         if returned_id:
-            if isinstance(returned_id[0], int):
-                warehouse_address = address.Address_by_ID(returned_id)
+            returned_id = returned_id[0]
+            if isinstance(returned_id, int):
+                warehouse_address = address.Address(returned_id)
                 return warehouse_address
-
-class Warehouse_by_ID(Warehouse):
-
-    def __init__(self, given_id):
-        # Ensuring given ID is int
-        if isinstance(given_id, int):
-            # Ensuring warehouse ID is in warehouses table
-            cursor.execute("select from warehouses where id = :warehouse_id", warehouse_id = given_id)
-            if cursor.fetchone():
-                self._id = given_id
-            else:
-                print("Given ID not in warehouses table, id: %i" %given_id)
-        else:
-            print("Given ID not an int, id: %s" %str(given_id))
