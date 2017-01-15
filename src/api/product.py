@@ -61,9 +61,8 @@ class Product():
 
 
         if type_id:
-            if type(type_id).__name__ == 'int':
+            if isinstance(type_id, int):
                 # Adding new product to database (ONLY name and type_id) and retrieving generated product ID
-                print(type_id)
                 returned_id = cursor.var(cx_Oracle.NUMBER)
                 cursor.execute("insert into products (name, product_type_id, product_size) values \
                     (:product_name, :ptype_id, :psize) returning id into :new_product_id", product_name = name, \
