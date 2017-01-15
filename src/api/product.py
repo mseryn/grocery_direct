@@ -51,14 +51,26 @@ cursor = db.cursor()
 
 class Product():
 
-    def __init__(self, name, type_string, description = None, nutrition_facts = None, alcohol_content = None, size = 1):
-        db = cx_Oracle.connect('system', 'oracle')
-        cursor = db.cursor()
+    def __init__(self, given_id):
+        # Ensuring given ID is int
+        if isinstance(given_id, int):
+            # Ensuring warehouse ID is in warehouses table
+            cursor.execute("select id from products where id = :product_id", product_id = given_id)
+            if cursor.fetchone():
+                self._id = given_id
+
+            else:
+                print("Given ID not in products table, id: %i" %given_id)
+        else:
+            print("Given ID not an int, id: %s" %str(given_id))
+
+    @staticmethod
+    def new_product(name, type_string, description = None, nutrition_facts = None, alcohol_content = None, size = 1):
+        # Adding new product to database, returning reference to new product instance
 
         # Getting type_id from type_string, ensuring it's a valid type string (returns int ID)
         cursor.execute("select id from product_types where product_type = :input_type", input_type = type_string)
         type_id = cursor.fetchone()[0]
-
 
         if type_id:
             if isinstance(type_id, int):
@@ -68,15 +80,18 @@ class Product():
                     (:product_name, :ptype_id, :psize) returning id into :new_product_id", product_name = name, \
                     ptype_id = type_id, new_product_id = returned_id, psize = size)
                 db.commit()
-                self._id = returned_id
+
+                # Getting product reference
+                returned_id = int(returned_id.getvalue())
+                new_product = Product(returned_id)
 
                 # Now adding description, nutrition facts, and alcohol content (automatically generating defaults)
-                self.modify_description(description)
-                self.modify_nutrition_facts(nutrition_facts)
-                self.modify_alcohol_content(alcohol_content)
+                new_product.modify_description(description)
+                new_product.modify_nutrition_facts(nutrition_facts)
+                new_product.modify_alcohol_content(alcohol_content)
 
-        # TODO: requires functional person to test, do later
-        #_price = self.get_price()
+                return new_product
+
 
     # Get Methods
 
@@ -114,7 +129,7 @@ class Product():
         if state_id:
             state_id = state_id[0]
             # Then must look at state-to-product table, see if price listed
-            cursor.execute("select state_price from state_code_to_product where product_id = :p_id and state_id = :s_id", \
+            cursor.execute("select state_price from state_to_product where product_id = :p_id and state_id = :s_id", \
                 p_id = self.get_id(), s_id = state_id)
             price = cursor.fetchone()
             # If yes to both above conditions, return a price (ensuring it's a valid price), otherwise return -1.0 (sentianl)
@@ -197,17 +212,17 @@ class Product():
             # Ensure price is number and is positive:
             if isinstance(new_price, (int, float, long)) and new_price >= 0:
                 # Then must look at state-to-product table, see if price listed
-                cursor.execute("select state_price from state_code_to_product where product_id = :p_id and state_id = :s_id", \
+                cursor.execute("select state_price from state_to_product where product_id = :p_id and state_id = :s_id", \
                     p_id = self.get_id(), s_id = state_id)
                 old_price = cursor.fetchone()
                 if old_price:
                     # Existing state price overwrite:
-                    cursor.execute("update state_code_to_product set state_price = :input_price where product_id = :p_id and state_id = :s_id", \
+                    cursor.execute("update state_to_product set state_price = :input_price where product_id = :p_id and state_id = :s_id", \
                         input_price = new_price, p_id = self.get_id(), s_id = state_id)
                     db.commit()
                 else:
                     # New state price, new row:
-                    cursor.execute("insert into state_code_to_product (state_id, product_id, state_price) \
+                    cursor.execute("insert into state_to_product (state_id, product_id, state_price) \
                         values (:s_id, :p_id, :price)", s_id = state_id, p_id = self.get_id(), price = new_price)
                     db.commit()
 
