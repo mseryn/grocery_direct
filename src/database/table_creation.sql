@@ -199,7 +199,7 @@ create table warehouse_to_product
     constraint product_quantity_check  check (quantity > 0)
 );
 
-create table state_code_to_product
+create table state_to_product
 (
     state_id        integer,
     product_id      integer,
