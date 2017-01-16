@@ -72,68 +72,38 @@ class Warehouse():
                         warehouse_id = self.get_id())
         return cursor.fetchone()[0]
 
-    # Address-Get Methods
+    def get_stock(self):
+        stock = []
+        cursor.execute("select product_id \
+                        from warehouses join warehouse_to_product \
+                        on warehouses.id = warehouse_to_product.warehouse_id \
+                        where warehouses.id = :warehouse_id", warehouse_id = self.get_id())
+        product_list = cursor.fetchall()
+        if product_list:
+            for product_id in product_list:
+                stock.append(product.Product(int(product_id[0])))
+        return stock
+
+    def get_product_quantity(self, product):
+        cursor.execute("select quantity \
+                        from warehouses join warehouse_to_product \
+                        on warehouses.id = warehouse_to_product.warehouse_id \
+                        where warehouses.id = :warehouse_id \
+                        and warehouse_to_product.product_id = :input_product", \
+                        warehouse_id = self.get_id(), input_product = product.get_id())
+        product_quantity = cursor.fetchone()
+        if product_quantity:
+            return product_quantity[0]
+        else:
+            return 0
+
+    def get_remaining_capacity(self):
+        total_used_space = 0
+        for product in self.get_stock():
+            total_used_space += product.get_size() * self.get_product_quantity(product)
+        return self.get_capacity() - total_used_space
 
     def get_address(self):
-        address = self.get_address_reference()
-        return address.get_address_string()
-
-    def get_street(self):
-        address = self.get_address_reference()
-        return address.get_street()
-
-    def get_apartment_no(self):
-        address = self.get_address_reference()
-        return address.get_apartment_no()
-
-    def get_city(self):
-        address = self.get_address_reference()
-        return address.get_city()
-
-    def get_state(self):
-        address = self.get_address_reference()
-        return address.get_state()
-
-    def get_zip_code(self):
-        address = self.get_address_reference()
-        return address.get_zip_code()
-
-    # Modification Methods
-
-    def modify_capacity(self, new_capacity):
-        if isinstance(new_capacity, (int, float)):
-            if new_capacity >=0:
-                # Ensuring new capacity is >= remaining capacity -- TODO
-                cursor.execute("update warehouses set capacity = :input_capacity \
-                                where id = :warehouse_id", input_capacity = int(new_capacity), \
-                                warehouse_id = self.get_id())
-                db.commit()
-        else:
-            print("New capacity must be integer \nInput capacity: %s" %(str(new_capacity)))
-
-    def modify_street(self, new_street):
-        address = self.get_address_reference()
-        address.modify_street(new_street)
-
-    def modify_apartment_no(self, new_apt):
-        address = self.get_address_reference()
-        address.modify_apartment_no(new_apt)
-
-    def modify_city(self, new_city):
-        address = self.get_address_reference()
-        address.modify_city(new_city)
-
-    def modify_state(self, new_state):
-        address = self.get_address_reference()
-        address.modify_state(new_state)
-
-    def modify_zip_code(self, new_zip):
-        address = self.get_address_reference()
-        address.modify_zip_code(new_zip)
-
-    # Helper Methods
-
-    def get_address_reference(self):
         cursor.execute("select address_id from warehouses where id = :warehouse_id", \
                         warehouse_id = self.get_id())
         returned_id = cursor.fetchone()
@@ -142,3 +112,100 @@ class Warehouse():
             if isinstance(returned_id, int):
                 warehouse_address = address.Address(returned_id)
                 return warehouse_address
+        else:
+            return None
+
+    # Modification Methods
+
+    def modify_capacity(self, new_capacity):
+        if isinstance(new_capacity, (int, float)):
+            if new_capacity >=0:
+                if new_capacity >= (self.get_capacity() - self.get_remaining_capacity()):
+                    cursor.execute("update warehouses set capacity = :input_capacity \
+                                    where id = :warehouse_id", input_capacity = int(new_capacity), \
+                                    warehouse_id = self.get_id())
+                    db.commit()
+                else:
+                    print("New capacity must be >= remaining capacity")
+            else:
+                print("Capacity must be >=0")
+        else:
+            print("New capacity must be integer \nInput capacity: %s" %(str(new_capacity)))
+
+    def add_product(self, new_product):
+        product_id = new_product.get_id()
+        cursor.execute("select quantity from warehouse_to_product \
+                        where product_id = :input_pid and warehouse_id = :input_wid", \
+                        input_pid = product_id, input_wid = self.get_id())
+        current_quantity = cursor.fetchone()
+        if current_quantity:
+            # The item is already in this table in the DB, just incriment quantity
+            incrimented_quantity = int(current_quantity[0]) + 1
+            cursor.execute("update warehouse_to_product set quantity = :input_quantity \
+                            where product_id = :input_pid and warehouse_id = :input_wid", \
+                            input_quantity = incrimented_quantity, input_pid = product_id, \
+                            input_wid = self.get_id())
+            db.commit()
+        else:
+            # The item is not yet in the warehouse's stock, so add it to the table
+            cursor.execute("insert into warehouse_to_product (product_id, warehouse_id, quantity) \
+                            values (:input_pid, :input_wid, :input_quantity)", \
+                            input_pid = product_id, input_wid = self.get_id(), input_quantity = 1)
+            db.commit()
+
+    def remove_product(self, product):
+        product_id = product.get_id()
+        cursor.execute("select quantity from warehouse_to_product \
+                        where product_id = :input_pid and warehouse_id = :input_wid", \
+                        input_pid = product_id, input_wid = self.get_id())
+        current_quantity = cursor.fetchone()
+
+        if current_quantity:
+            # The item is already in this table in the DB, just decriment quantity
+            decrimented_quantity = int(current_quantity[0]) - 1
+            if decrimented_quantity > 0:
+                # Removing one will not remove all instances of that product
+                cursor.execute("update warehouse_to_product set quantity = :input_quantity \
+                                where product_id = :input_pid and warehouse_id = :input_wid", \
+                                input_quantity = decrimented_quantity, input_pid = product_id, \
+                                input_wid = self.get_id())
+                db.commit()
+            else:
+                # Remove the line from the DB if product has quantity of zero
+                cursor.execute("delete from warehouse_to_product \
+                                where product_id = :input_pid and warehouse_id = :input_wid", \
+                                input_pid = product_id, input_wid = self.get_id())
+                db.commit()
+        else:
+            # The item is not yet in the warehouse's stock, so do nothing
+            pass
+
+    def modify_quantity(self, product, new_quantity):
+        if isinstance(new_quantity, int) and new_quantity >= 0:
+            product_id = product.get_id()
+            cursor.execute("select quantity from warehouse_to_product \
+                            where product_id = :input_pid and warehouse_id = :input_wid", \
+                            input_pid = product_id, input_wid = self.get_id())
+            current_quantity = cursor.fetchone()
+
+            if current_quantity:
+                # Ensuring product is in warehouse stock
+                current_quantity = int(current_quantity[0])
+                if current_quantity == new_quantity:
+                    # Do nothing if quantity doesn't change
+                    pass
+                elif new_quantity == 0: 
+                    # Remove line in DB is new quantity is zero
+                    cursor.execute("delete from warehouse_to_product \
+                                    where product_id = :input_pid and warehouse_id = :input_wid", \
+                                    input_pid = product_id, input_wid = self.get_id())
+                    db.commit()
+                else:
+                    # Otherwise just update the quantity
+                    cursor.execute("update warehouse_to_product set quantity = :input_quantity \
+                                    where product_id = :input_pid and warehouse_id = :input_wid", \
+                                    input_quantity = new_quantity, input_pid = product_id, \
+                                    input_wid = self.get_id())
+                    db.commit()
+        else:
+            print("new quantity must be positive integer value")
