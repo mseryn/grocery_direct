@@ -31,3 +31,7 @@ Instructions:
     > sql: @table_creation.sql
     > sql: exit
     > python populate_tables.py
+
+    To run tests:
+    > cd 425_project/src/tests/unit_tests
+    > PYTHONPATH=../../api/ pytest <filename.py>
