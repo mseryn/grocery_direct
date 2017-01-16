@@ -57,6 +57,15 @@ class Address():
     def get_id(self):
         return self._id
 
+    def get_address_string(self):
+        apt_no = self.get_apartment_no()
+        if apt_no:
+            return ", ".join((self.get_street(), apt_no, self.get_city(), \
+                " ".join((self.get_state(), str(self.get_zip_code())))))
+        else:
+            return ", ".join((self.get_street(), self.get_city(), " ".join((self.get_state(), \
+                str(self.get_zip_code())))))
+
     def get_street(self):
         cursor.execute("select street from addresses where id = :address_id", \
                         address_id = self.get_id())

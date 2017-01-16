@@ -5,17 +5,17 @@
  * Written for CS 425-02 Fall 2016 Project
 */
 
-drop table state_code_to_product ;
 drop table supplier_to_product ;
+drop table state_to_product ;
 drop table warehouse_to_product ;
 drop table order_to_product ;
 
-drop table persons ;
 drop table warehouses ;
-drop table orders ;
 drop table products ;
 drop table product_images ;
 drop table credit_cards ;
+drop table orders ;
+drop table persons ;
 drop table addresses ;
 
 drop table card_types ;
@@ -86,38 +86,6 @@ create table addresses
     constraint      address_type_fk foreign key (address_type_id)  references address_types(id)
 );
 
-create table orders
-(
-    id              integer generated always as identity primary key,
-    submission_date timestamp,
-    total_cost      numeric(8, 2),
-    status_id       integer,
-    billing_addr_id integer,
-    shipping_addr_id integer,
-    constraint      status_fk              foreign key (status_id)        references order_statuses(id),
-    constraint      order_billing_addr_fk  foreign key (billing_addr_id)  references addresses(id),
-    constraint      order_shipping_addr_fk foreign key (shipping_addr_id) references addresses(id)
-);
-
-create table credit_cards
-(
-    id              integer generated always as identity primary key,
-    card_number     numeric(16, 0) not null,
-    security_code   numeric(3, 0) not null,
-    expiration_date date not null,
-    /*
-    person_id       integer,
-    */
-    card_type_id    integer,
-    billing_addr_id integer,
-    /*
-    person_id       integer foreign key (person_id) references persons(id),
-    */
-    constraint      card_type_fk         foreign key (card_type_id)    references card_types(id),
-    constraint      card_billing_addr_fk foreign key (billing_addr_id) references addresses(id)
-);
-
-
 
 create table persons 
 (
@@ -130,18 +98,45 @@ create table persons
     salary          numeric(8, 2),
     job_title       varchar(20),
     balance         numeric(8, 2),
-    cart_id         integer,
-    person_type_id  integer,
     default_billing_address     integer,
     default_shipping_address    integer,
     default_warehouse_address   integer,
     default_supplier_address    integer,
-    constraint      cart_fk        foreign key (cart_id)        references orders(id),
+    person_type_id  integer,
     constraint      person_type_fk foreign key (person_type_id) references person_types(id),
     constraint      default_billing_addr_fk    foreign key (default_billing_address)   references addresses(id),
     constraint      default_shipping_addr_fk   foreign key (default_shipping_address)  references addresses(id),
     constraint      default_warehouse_addr_fk  foreign key (default_warehouse_address) references addresses(id),
     constraint      default_supplier_addr_fk   foreign key (default_supplier_address)  references addresses(id)
+);
+
+create table orders
+(
+    id              integer generated always as identity primary key,
+    submission_date timestamp,
+    total_cost      numeric(8, 2),
+    status_id       integer,
+    billing_addr_id integer,
+    shipping_addr_id integer,
+    person_id       integer,
+    constraint      person_fk_for_person   foreign key (person_id)        references persons(id),
+    constraint      status_fk              foreign key (status_id)        references order_statuses(id),
+    constraint      order_billing_addr_fk  foreign key (billing_addr_id)  references addresses(id),
+    constraint      order_shipping_addr_fk foreign key (shipping_addr_id) references addresses(id)
+);
+
+create table credit_cards
+(
+    id              integer generated always as identity primary key,
+    card_number     numeric(16, 0) not null,
+    security_code   numeric(3, 0) not null,
+    expiration_date date not null,
+    card_type_id    integer,
+    billing_addr_id integer,
+    person_id       integer,
+    constraint      person_fk_for_cc     foreign key (person_id)       references persons(id),
+    constraint      card_type_fk         foreign key (card_type_id)    references card_types(id),
+    constraint      card_billing_addr_fk foreign key (billing_addr_id) references addresses(id)
 );
 
 create table product_images
@@ -184,7 +179,7 @@ create table order_to_product
 (
     order_id        integer,
     product_id      integer,
-    order_price     numeric(8, 2) not null,
+    quantity        numeric(8, 2) not null,
     constraint order_to_product_fk foreign key (order_id)   references orders(id),
     constraint product_to_order_fk foreign key (product_id) references products(id)
 );

@@ -29,16 +29,14 @@
 #*      -- products from list
 #***
 
-#**************************************************************************************************
-#**  ORDERS: TESTING CUSTOMER
-#**************************************************************************************************
+import order
+import person
+import product
+import address
 
-def order_get_id():
-    # successfully retrieve order ID
-    order = order.Order()
-    assert_true(order.get_id(), 1, /
-        "get_id() did not return correct order ID")
-
+TEST_CUSTOMER   = person.Person.new_person()
+TEST_PRODUCT    = product.Product.new_product()
+TEST_ADDRESS    = address.Address.new_address()
 
 #**************************************************************************************************
 #**  ORDERS: TESTING CUSTOMER
@@ -59,20 +57,20 @@ def order_add_product():
     order = order.Order()
     product = product.Product("test product", "non-food", 1.00, description = "unit test product")
     order.add_product(product.get_id())
-    assert(order._products = [product]), "add_product did not correctly add a product"
+    assert(order.get_product_list() = [product]), "add_product did not correctly add a product"
 
 def order_add_invalid_product():
     # unsuccessfully add nonexistant product
     order = order.Order()
     product = "this is not a valid product"
     order.add_product(product.get_id())
-    assert(order._products = [product]), "add_product incorrectly added invalid product"
+    assert(order.get_product_list() = [product]), "add_product incorrectly added invalid product"
 
 def order_add_null_product():
     # unsuccessfully add null product 
     order = order.Order()
     order.add_product(null)
-    assert(order._products = []), "add_product incorrectly added a null product"
+    assert(order.get_product_list() = []), "add_product incorrectly added a null product"
 
 def order_remove_product():
     # remove product 
@@ -80,7 +78,7 @@ def order_remove_product():
     product = product.Product("test product", "non-food", 1.00, description = "unit test product")
     order.add_product(product.get_id())
     order.remove_product(product.get_id())
-    assert(order._products = []), "remove_product did not correctly remove a product"
+    assert(order.get_product_list() = []), "remove_product did not correctly remove a product"
 
 def order_remove_nonexistant_product():
     # successfully return after attempt to remove product not in order
@@ -88,7 +86,7 @@ def order_remove_nonexistant_product():
     order = order.Order()
     product = product.Product("test product", "non-food", 1.00, description = "unit test product")
     order.remove_product(product.get_id())
-    assert(order._products = []), "remove_product incorrectly returned removing invalid product"
+    assert(order.get_product_list() = []), "remove_product incorrectly returned removing invalid product"
 
 def order_remove_invalid_product():
     # unsuccessfully remove nonexistant product 
@@ -96,26 +94,26 @@ def order_remove_invalid_product():
     product = "this is not a valid product"
     order.add_product(product.get_id())
     order.remove_product(product.get_id())
-    assert(order._products = []), /
+    assert(order.get_product_list() = []), /
         "remove_product incorrectly returned removing nonexistant product"
 
 def order_remove_null_product():
     # unsuccessfully remove null product 
     order = order.Order()
     order.remove_product(null)
-    assert(order._products = []), "remove_product incorrectly returned removing null product"
+    assert(order.get_product_list() = []), "remove_product incorrectly returned removing null product"
 
-def order_get_products():
+def order_get_product_list():
     # get list of all product s
     order = order.Order()
     product = product.Product("test product", "non-food", 1.00, description = "unit test product")
     order.add_product(product.get_id())
-    assert(order.get_products() = [product]), "get_products did not correctly list products"
+    assert(order.get_product_list() = [product]), "get_products did not correctly list products"
 
 def order_get_products_empty_list():
     # get empty list from products
     order = order.Order()
-    assert(order.get_products() = []), "get_products did not correctly list empty list of products"
+    assert(order.get_product_list() = []), "get_products did not correctly list empty list of products"
 
 def order_get_total_cost():
     # successfully retrieve total cost for items in product list
