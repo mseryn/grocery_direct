@@ -29,11 +29,10 @@
 #*      -- products from list
 #***
 
-import customer
 import product
 import address
 
-import datetime.datetime
+import datetime
 import cx_Oracle
 
 class Order():
@@ -94,7 +93,7 @@ class Order():
         returned_products = cursor.fetchall()
 
         if returned_products:
-            for product_id in returned_products
+            for product_id in returned_products:
                 product_list.append(product.Product(product_id))
 
         db.close()
@@ -213,7 +212,7 @@ class Order():
                             input_status = status_id, input_id = self.get_id())
             db.commit()
         else:
-            print("Status is not valid order status string. \nString given: %s", %(new_status))
+            print("Status is not valid order status string. \nString given: %s" %(new_status))
         db.close()
 
     def modify_shipping_address(self, new_address):
@@ -280,7 +279,7 @@ class Order():
                 db.commit()
             elif current_quantity == 1:
                 # Only one product exists, remove row from DB
-                cursor.execute("delete from order_to_product
+                cursor.execute("delete from order_to_product \
                                 where order_id = :input_oid and product_id = :input_pid", \
                                 input_oid = self.get_id(), input_pid = product.get_id())
                 db.commit()
@@ -290,7 +289,7 @@ class Order():
             print("product must be a product instance")
         db.close()
 
-    def change_product_quantity(self, product, new_quantity):
+    def modify_product_quantity(self, product, new_quantity):
         db = cx_Oracle.connect("system", "oracle")
         cursor = db.cursor()
 
@@ -299,7 +298,7 @@ class Order():
             if isinstance(product, product.Product):
                 if new_quantity == 0:
                     # Remove product from table
-                    cursor.execute("delete from order_to_product
+                    cursor.execute("delete from order_to_product \
                                     where order_id = :input_oid and product_id = :input_pid", \
                                     input_oid = self.get_id(), input_pid = product.get_id())
                     db.commit()
