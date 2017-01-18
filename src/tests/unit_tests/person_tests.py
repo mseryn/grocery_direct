@@ -41,19 +41,73 @@
 
 import person
 
+
+#************************************************************************************************#
+#** DEFAULTS FOR TESTS
+#************************************************************************************************#
+
+# Default strings for test ship_address
+SHIP_STREET         = "123 Shipping St."
+SHIP_APT_NO         = "Apt No. 1"
+SHIP_CITY           = "Shipping City"
+SHIP_STATE_CODE     = "AZ"
+SHIP_ZIP_CODE       = 12345
+SHIP_TYPE_STRING    = "shipping"
+
+# Default strings for test bill_address
+BILL_STREET         = "654 Billing St."
+BILL_CITY           = "Billing City"
+BILL_STATE_CODE     = "MI"
+BILL_ZIP_CODE       = 98765
+BILL_TYPE_STRING    = "billing"
+
+# Default strings for test person
+FNAME       = "FirstName"
+LNAME       = "LastName"
+MIDDLE_INIT = "MI"
+USERNAME    = "testaccount"
+PASSWORD    = "testpassword"
+
+TYPE_STRING = "customer"
+
+# Test objects (avoid cluttering db)
+SHIP_ADDRESS = address.Address.new_address(SHIP_STREET, SHIP_CITY, SHIP_STATE_CODE, \
+                SHIP_ZIP_CODE, SHIP_TYPE_STRING)
+BILL_ADDRESS = address.Address.new_address(BILL_STREET, BILL_CITY, BILL_STATE_CODE, \
+                BILL_ZIP_CODE, BILL_TYPE_STRING)
+PRODUCT      = product.Product.new_product("test product", "food", \
+                description = "test product for person tests")
+
 #**************************************************************************************************
 #**  USERNAME/PASSWORD
 #**************************************************************************************************
 
 def person_check_user_pw():
-    test_person = new_person(FNAME, LNAME, middle_initial = MI
-    pass
+    test_person = new_person(USERNAME, PASSWORD, FNAME, LNAME, middle_initial = MIDDLE_INITIAL)
+    assert(test_person.test_credentials(USERNAME, PASSWORD) == True), \
+        "test_credentials() did not correctly return True given valid inputs for person"
+
+def person_get_username():
+    test_person = new_person(USERNAME, PASSWORD, FNAME, LNAME, middle_initial = MIDDLE_INITIAL)
+    assert(test_person.get_username() == USERNAME), \
+        "get_username() did not return username for person"
+
+def person_check_password():
+    test_person = new_person(USERNAME, PASSWORD, FNAME, LNAME, middle_initial = MIDDLE_INITIAL)
+    assert(test_person.check_password(PASSWORD) == True) \
+        "check_password() did not return True when given correct password for person"
+
+def person_check_password_invalid():
+    test_person = new_person(USERNAME, PASSWORD, FNAME, LNAME, middle_initial = MIDDLE_INITIAL)
+    assert(test_person.check_password("not valid password") == False) \
+        "check_password() did not return False when given incorrect password for person"
 
 # Manipulating username
 
 def person_modify_username():
     # successfully modify own username with unique new username
-    pass
+    test_person = new_person(USERNAME, PASSWORD, FNAME, LNAME, middle_initial = MIDDLE_INITIAL)
+    test_person.modify_username("new_user")
 
 def person_modify_username_with_nonunique_new_username():
     # unsuccessfully modify own username with non-unique new username
