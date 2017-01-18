@@ -77,28 +77,25 @@ BILL_ADDRESS = address.Address.new_address(BILL_STREET, BILL_CITY, BILL_STATE_CO
                 BILL_ZIP_CODE, BILL_TYPE_STRING)
 PRODUCT      = product.Product.new_product("test product", "food", \
                 description = "test product for person tests")
+TEST_PERSON = person.new_person(USERNAME, PASSWORD, FNAME, LNAME, middle_initial = MIDDLE_INITIAL)
 
 #**************************************************************************************************
 #**  USERNAME/PASSWORD
 #**************************************************************************************************
 
 def person_check_user_pw():
-    test_person = new_person(USERNAME, PASSWORD, FNAME, LNAME, middle_initial = MIDDLE_INITIAL)
     assert(test_person.test_credentials(USERNAME, PASSWORD) == True), \
         "test_credentials() did not correctly return True given valid inputs for person"
 
 def person_get_username():
-    test_person = new_person(USERNAME, PASSWORD, FNAME, LNAME, middle_initial = MIDDLE_INITIAL)
     assert(test_person.get_username() == USERNAME), \
         "get_username() did not return username for person"
 
 def person_check_password():
-    test_person = new_person(USERNAME, PASSWORD, FNAME, LNAME, middle_initial = MIDDLE_INITIAL)
     assert(test_person.check_password(PASSWORD) == True) \
         "check_password() did not return True when given correct password for person"
 
 def person_check_password_invalid():
-    test_person = new_person(USERNAME, PASSWORD, FNAME, LNAME, middle_initial = MIDDLE_INITIAL)
     assert(test_person.check_password("not valid password") == False) \
         "check_password() did not return False when given incorrect password for person"
 
@@ -106,25 +103,30 @@ def person_check_password_invalid():
 
 def person_modify_username():
     # successfully modify own username with unique new username
-    test_person = new_person(USERNAME, PASSWORD, FNAME, LNAME, middle_initial = MIDDLE_INITIAL)
-    test_person.modify_username("new_user")
+    new_test_person = new_person("second test person", PASSWORD, FNAME, LNAME, \
+        middle_initial = MIDDLE_INITIAL)
+    test_person.modify_username("new user")
+    assert(test_person.get_username() == "new user"), \
+        "modify and get username did not modify and retrieve username for person"
 
 def person_modify_username_with_nonunique_new_username():
     # unsuccessfully modify own username with non-unique new username
-    pass
+    test_person.modify_username("new user")
+    assert(test_person.get_username() == 
 
 def person_modify_unauthorized_username():
     # unsuccessfully modify another's username
-    pass
+    test_person = new_person(USERNAME, PASSWORD, FNAME, LNAME, middle_initial = MIDDLE_INITIAL)
 
 # Manipulating password
 
 def person_modify_password():
     # successfully modify own password
-    pass
+    test_person = new_person(USERNAME, PASSWORD, FNAME, LNAME, middle_initial = MIDDLE_INITIAL)
 
 def person_modify_unauthorized_password():
     # unsuccessfully modify another's password
+    test_person = new_person(USERNAME, PASSWORD, FNAME, LNAME, middle_initial = MIDDLE_INITIAL)
     pass
 
 #**************************************************************************************************
