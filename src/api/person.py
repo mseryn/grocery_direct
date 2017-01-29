@@ -1,40 +1,51 @@
 #***
-#*  GroceryDirect - Order Class
+#*  GroceryDirect - Person Class
 #*  
 #*  Author: Melanie Cornelius, mseryn
 #*  Written for CS 425-02 Fall 2016 Final Project
 #*
-#*  Order Description:
+#*  Person Description:
 #*  - has:
-#*      -- customer (owner) 
-#*      -- id
-#*      -- product list
-#*      -- shipping address
-#*      -- status
-#*      -- placement date -- TODO, how implement?
+#*      -- username
+#*      -- PW (hashed)
+#*      -- first name, last name, middle initial (optional)
+#*      -- type
+#*      -- addresses (via address table)
+#*      -- orders (via order table) (customers only)
+#*      -- salary (not customer)
+#*      -- job title (not customer)
+#*      -- balance (customer only)
 #*  - get:
-#*      -- product list
-#*      -- total cost of products
-#*      -- shipping address
-#*      -- shipping state (for ease) - TODO
-#*      -- order placement date
-#*      -- order status
-#*      -- customer ID
+#*      -- username
+#*      -- PW (hashed)
+#*      -- first name, last name, middle initial (optional)
+#*      -- type
+#*      -- addresses (via address table)
+#*      -- orders (via order table) (customers only)
+#*      -- cart (customer only)
+#*      -- salary (not customer)
+#*      -- job title (not customer)
+#*      -- balance (customer only)
 #*  - modify:
-#*      -- product quantity -- TODO, vital
-#*      -- shipping address
-#*      -- order placement date -- TODO, how implement?
-#*      -- order status
-#*  - add/remove:
-#*      -- products from list
+#*      -- username
+#*      -- PW (hashed)
+#*      -- first name, last name, middle initial (optional)
+#*      -- type
+#*      -- addresses (via address table)
+#*      -- orders (via order table) (customers only)
+#*      -- cart (customer only)
+#*      -- salary (not customer)
+#*      -- job title (not customer)
+#*      -- balance (customer only)
 #***
 
-import product
 import address
+import database
+import order
 
-import datetime
+import hashlib
 
-class Order():
+class Person():
     def __init__(self, given_id):
         db = database.connect()
         cursor = database.get_cursor(db)
@@ -53,152 +64,194 @@ class Order():
         database.close(db)
 
     @staticmethod
-    def new_order(customer):
+    def new_person(username, password, first_name, last_name, type_string, middle_initial = None):
         db = database.connect()
         cursor = database.get_cursor(db)
 
         returned_id = returned_id = cursor.var(cx_Oracle.NUMBER)
-        initial_status = "pending"
 
-        status_id = cursor.fetchone()
-        if status_id:
-            status_id = status_id[0]
+        # getting person type ID from type_string
+        cursor.execute("select id from person_types where person_type = :input_type", \
+                        input_type = type_string)
+        type_id = cursor.fetchone()
+        if type_id:
+            type_id = type_id[0]
 
-        if isinstance(customer, person.Person):
-            cursor.execute("insert into orders (person_id, status_id) \
-                            values (:input_pid, :input_sid) \
+        hashed_password = hash_password(username, password)
+            
+        if type_id and middle_initial:
+            cursor.execute("insert into persons \
+                            (username, password, first_name, middle_initial, last_name, \
+                            person_type_id) \
+                            values (:input_username, :input_password, \
+                            :input_first, :input_middle, :input_last, :input_type_id)
                             returning id into :output_id", \
-                            input_pid = customer.get_id(), input_sid = status_id, \
+                            input_username = username, input_password = hashed_password, \
+                            input_first = first_name, input_middle = middle_name, \
+                            input_last = last_name, input_type_id = type_id, \
                             output_id = returned_id)
             database.commit(db)
-        
+        elif type_id and not middle_initial:
+            cursor.execute("insert into persons \
+                            (username, password, first_name, last_name, \
+                            person_type_id) \
+                            values (:input_username, :input_password, \
+                            :input_first, :input_last, :input_type_id)
+                            returning id into :output_id", \
+                            input_username = username, input_password = hashed_password, \
+                            input_first = first_name, \
+                            input_last = last_name, input_type_id = type_id, \
+                            output_id = returned_id)
+            database.commit(db)
+                            
         database.close(db)
-        return Order(returned_id)
+        return Person(returned_id)
 
     # Get Methods
 
     def get_id(self):
         return self._id
 
-    def get_product_list(self):
+    def get_type(self):
         db = database.connect()
         cursor = database.get_cursor(db)
-        
-        product_list = []
-
-        cursor.execute("select product_id from order_to_product \
-                        where order_id = :input_id", \
+        cursor.execute("select person_types.person_type \
+                        from person_types join persons on person_types.id = persons.person_type_id \
+                        where persons.id = :input_id", \
                         input_id = self.get_id())
-        returned_products = cursor.fetchall()
-
-        if returned_products:
-            for product_id in returned_products:
-                product_list.append(product.Product(product_id))
-
+        type_string = cursor.fetchone()[0]
         database.close(db)
-        return product_list
+        return type_string
 
-    def get_product_quantity(self, product):
+    def get_first_name(self):
         db = database.connect()
         cursor = database.get_cursor(db)
-
-
-        if isinstance(product, product.Product):
-            cursor.execute("select id from products where id = :input_pid", \
-                            input_pid = product.get_id())
-            if cursor.fetchone():
-                cursor.execute("select quantity from order_to_product \
-                                where order_id = :input_id and product_id = :input_pid", \
-                                input_id = self.get_id(), input_pid = product.get_id())
-                database.close(db)
-                return cursor.fetchone()[0]
-            else:
-                database.close(db)
-                return 0
-
-    def get_total_cost(self):
-        total_cose = 0
-        product_list = self.get_product_list()
-        if product_list and self.get_shipping_address():
-            for product in product_list:
-                total_cost += product.get_price_per_state(self.get_shipping_address().get_state()) \
-                              * self.get_product_quantity(product)
-        return total_cost
-
-    def get_status(self):
-        db = database.connect()
-        cursor = database.get_cursor(db)
-
-        cursor.execute("select order_statuses.order_status \
-                        from order_statuses join orders on order_statuses.id = orders.status_id \
-                        where orders.id = :input_id", input_id = self.get_id())
-        status_tuple = cursor.fetchone()
-        database.close(db)
-        if status_tuple:
-            return status_tuple[0]
-        else:
-            print("Status not found in DB, this should never happen")
-
-    def get_customer(self):
-        db = database.connect()
-        cursor = database.get_cursor(db)
-
-        cursor.execute("select person_id from orders where id = :input_id", \
+        cursor.execute("select first_name \
+                        from persons where persons.id = :input_id", \
                         input_id = self.get_id())
-        customer_id_tuple = cursor.fetchone()
+        name = cursor.fetchone()[0]
         database.close(db)
-        if customer_id_tuple:
-            return customer.Customer(customer_id_tuple()[0])
-        else:
-            print("person id was not found, this should never happen")
+        return name
 
-    def get_shipping_address(self):
+    def get_middle_initial(self):
         db = database.connect()
         cursor = database.get_cursor(db)
-
-        cursor.execute("select shipping_addr_id from orders where id = :input_id", \
+        cursor.execute("select middle_initial \
+                        from persons where persons.id = :input_id", \
                         input_id = self.get_id())
-        shipping_id_tuple = cursor.fetchone()
+        middle_initial = cursor.fetchone()
         database.close(db)
-        if shipping_id_tuple:
-            return address.Address(shipping_id_tuple[0])
+        if middle_initial:
+            return middle_initial[0]
         else:
-            print("Shipping address not set for this order.")
-
-    def get_billing_address(self):
-        db = database.connect()
-        cursor = database.get_cursor(db)
-
-        cursor.execute("select billing_addr_id from orders where id = :input_id", \
-                        input_id = self.get_id())
-        billing_id_tuple = cursor.fetchone()
-        database.close(db)
-        if billing_id_tuple:
-            return address.Address(billing_id_tuple[0])
-        else:
-            print("Shipping address not set for this order.")
-
-    def get_submission_date(self):
-        db = database.connect()
-        cursor = database.get_cursor(db)
-
-        if self.get_status() == "pending":
-            print("Order has not yet been submitted.")
             return None
 
-        cursor.execute("select submission_date from orders where id = :input_id", \
+    def get_last_name(self):
+        db = database.connect()
+        cursor = database.get_cursor(db)
+        cursor.execute("select last_name \
+                        from persons where persons.id = :input_id", \
                         input_id = self.get_id())
-        submission_date_tuple = cursor.fetchone()
-        if submission_date_tuple:
-            submission_date = submission_date_tuple[0].getvalue()
+        name = cursor.fetchone()[0]
         database.close(db)
-        return submission_date
+        return name
+
+    def get_salary(self):
+        db = database.connect()
+        cursor = database.get_cursor(db)
+        cursor.execute("select salary \
+                        from persons where persons.id = :input_id", \
+                        input_id = self.get_id())
+        salary = cursor.fetchone()
+        database.close(db)
+        if salary:
+            return salary[0]
+        else:
+            return None
+
+    def get_job_title(self):
+        db = database.connect()
+        cursor = database.get_cursor(db)
+        cursor.execute("select job_title \
+                        from persons where persons.id = :input_id", \
+                        input_id = self.get_id())
+        title = cursor.fetchone()
+        database.close(db)
+        if title:
+            return title[0]
+        else:
+            return None
+
+    # Customer attributes:
+
+    def get_order_history(self):
+        order_list = []
+        db = database.connect()
+        cursor = database.get_cursor(db)
+        cursor.execute("select id from orders \
+                        where person_id = :input_id", \
+                        input_id = self.get_id())
+        orders = cursor.fetchall()
+        if orders:
+            for order_id in orders:
+                order_list.append(order.Order(order_id))
+        database.close(db)
+        return order_list
+        
+    def get_cart(self):
+        orders = self.get_order_history()
+        for order in orders:
+            if order.get_type() == "pending":
+                return order
+        return None
+
+    def get_balance(self):
+        cart = self.get_cart()
+        if cart:
+            return cart.get_total_cost()
+        return None
+
+    # Addresses:
+
+    def get_addresses(self):
+        address_list = []
+        
+        db = database.connect()
+        cursor = database.get_cursor(db)
+
+        cursor.execute("select addresses.id \
+                        from addresses join persons on addresses.person_id = persons.id \
+                        where persons.id = :input_id", input_id = self.get_id())
+        addresses = cursor.fetchall()
+
+        if addresses:
+            for address_id in addresses:
+                address_list.append(address.Address(addres_id)
+        else:
+            address_list = []
+        return address_list
+
+    def get_default_billing_address(self):
+        db = database.connect()
+        cursor = database.get_cursor(db)
+
+        cursor.execute("select default_billing_address from persons \
+                        where id = :input_id", input_id = self.get_id())
+
+        address_id = cursor.fetchone()
+        database.close(db)
+
+        if address:
+            address = address.Address(address_id[0])
+        else:
+            address = 
+
 
     # Modify Methods
 
     def modify_status(self, new_status):
-        db = database.connect()
-        cursor = database.get_cursor(db)
+        db = cx_Oracle.connect("system", "oracle")
+        cursor = db.cursor()
 
         cursor.execute("select id from order_statuses where order_status = :input_status", \
                         input_status = new_status)
@@ -209,40 +262,40 @@ class Order():
             cursor.execute("update orders set status_id = :input_status \
                             where id = :input_id", \
                             input_status = status_id, input_id = self.get_id())
-            database.commit(db)
+            db.commit()
         else:
             print("Status is not valid order status string. \nString given: %s" %(new_status))
-        database.close(db)
+        db.close()
 
     def modify_shipping_address(self, new_address):
-        db = database.connect()
-        cursor = database.get_cursor(db)
+        db = cx_Oracle.connect("system", "oracle")
+        cursor = db.cursor()
 
         if isinstance(new_address, address.Address):
             cursor.execute("update orders set shipping_addr_id = :input_ship_id \
                             where id = :input_id", \
                             input_ship_id = new_address.get_id(), input_id = self.get_id()) 
-            database.commit(db)
+            db.commit()
         else:
             print("Requires valid address to set shipping address")
-        database.close(db)
+        db.close()
 
     def modify_billing_address(self, new_address):
-        db = database.connect()
-        cursor = database.get_cursor(db)
+        db = cx_Oracle.connect("system", "oracle")
+        cursor = db.cursor()
 
         if isinstance(new_address, address.Address):
             cursor.execute("update orders set billing_addr_id = :input_bill_id \
                             where id = :input_id", \
                             input_bill_id = new_address.get_id(), input_id = self.get_id()) 
-            database.commit(db)
+            db.commit()
         else:
             print("Requires valid address to set billing address")
-        database.close(db)
+        db.close()
 
     def add_product(self, new_product):
-        db = database.connect()
-        cursor = database.get_cursor(db)
+        db = cx_Oracle.connect("system", "oracle")
+        cursor = db.cursor()
 
         if isinstance(new_product, product.Product):
             current_quantity = self.get_product_quantity(product)
@@ -251,21 +304,21 @@ class Order():
                 cursor.execute("insert into order_to_product \
                                 (order_id, product_id) values (:input_oid, :input_pid)", \
                                 input_oid = self.get_id(), input_pid = new_product.get_id())
-                database.commit(db)
+                db.commit()
             else:
                 # Product already in order, incriment quantity
                 cursor.execute("update order_to_product set quantity = :input_quantity \
                                 where order_id = :input_oid and product_id = :input_pid", \
                                 input_quantity = (current_quantity + 1), \
                                 input_oid = self.get_id(), input_pid = new_product.get_id())
-                database.commit(db)
+                db.commit()
         else:
             print("new product must be a product instance")
-        database.close(db)
+        db.close()
 
     def remove_product(self, product):
-        db = database.connect()
-        cursor = database.get_cursor(db)
+        db = cx_Oracle.connect("system", "oracle")
+        cursor = db.cursor()
 
         if isinstance(product, product.Product):
             current_quantity = self.get_product_quantity(product)
@@ -275,22 +328,22 @@ class Order():
                                 where order_id = :input_oid and product_id = :input_pid", \
                                 input_quantity = (current_quantity - 1), \
                                 input_oid = self.get_id(), input_pid = product.get_id())
-                database.commit(db)
+                db.commit()
             elif current_quantity == 1:
                 # Only one product exists, remove row from DB
                 cursor.execute("delete from order_to_product \
                                 where order_id = :input_oid and product_id = :input_pid", \
                                 input_oid = self.get_id(), input_pid = product.get_id())
-                database.commit(db)
+                db.commit()
             else:
                 print("Product does not exist in order, doing nothing")
         else:
             print("product must be a product instance")
-        database.close(db)
+        db.close()
 
-    def modify_product_quantity(self, product, new_quantity):
-        db = database.connect()
-        cursor = database.get_cursor(db)
+    def change_product_quantity(self, product, new_quantity):
+        db = cx_Oracle.connect("system", "oracle")
+        cursor = db.cursor()
 
         if isinstance(new_quantity, int) and new_quantity >= 0:
             
@@ -300,7 +353,7 @@ class Order():
                     cursor.execute("delete from order_to_product \
                                     where order_id = :input_oid and product_id = :input_pid", \
                                     input_oid = self.get_id(), input_pid = product.get_id())
-                    database.commit(db)
+                    db.commit()
                 else:
                     current_quantity = self.get_product_quantity(product)
                     if current_quantity != 0:
@@ -309,7 +362,7 @@ class Order():
                                         where order_id = :input_oid and product_id = :input_pid", \
                                         input_quantity = new_quantity, \
                                         input_oid = self.get_id(), input_pid = product.get_id())
-                        database.commit(db)
+                        db.commit()
                     else:
                         # Product doesn't exist, add new row
                         cursor.execute("insert into order_to_product \
@@ -317,18 +370,21 @@ class Order():
                                         values (:input_oid, :input_pid, :input_quantity", \
                                         input_quantity = new_quantity, \
                                         input_oid = self.get_id(), input_pid = product.get_id())
-                        database.commit(db)
+                        db.commit()
             else:
                 print("product to change quantity must be valid product in products table")
         else:
             print("specified quantity must be int >= 0 \nquantity given: %i" %(new_quantity))
-        database.close(db)
+        db.close()
 
     def set_submission_date(self):
         # Sets submission date to now
-        db = database.connect()
-        cursor = database.get_cursor(db)
+        db = cx_Oracle.connect("system", "oracle")
+        cursor = db.cursor()
         cursor.execute("update orders set submission_date = :input_date where id = :input_id", \
                         input_date = datetime.datetime.now(), input_id = self.get_id())
-        database.commit(db)
-        database.close(db)
+        db.commit()
+        db.close()
+
+    def hash_password(username, password):
+        return (hashlib.md5(username.encode('utf-8') + password.encode('utf-8').hexdigest())

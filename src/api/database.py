@@ -9,7 +9,7 @@
 
 import cx_Oracle
 
-DATABASE_NAME       = "system"
+DATABASE_NAME       = "grocerydirect"
 DATABASE_PASSWORD   = "oracle"
 
 def connect():
