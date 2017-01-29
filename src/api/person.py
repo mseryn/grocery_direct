@@ -230,162 +230,151 @@ class Person():
                 address_list.append(address.Address(addres_id)
         else:
             address_list = []
+
+        database.close(db)
         return address_list
 
-    def get_default_billing_address(self):
+    def get_default_address(self, type_string):
+        # Returns default address of type type_string
         db = database.connect()
         cursor = database.get_cursor(db)
 
+        cursor.execute("select id from address_types where address_type = :input_str", \
+                        input_str = str(type_string))
+
+        type_id = cursor.fetchone()
+        if type_id:
+            type_id = type_id[0]
+        else:
+            raise ValueError("Type string given (%s) not valid type" %str(type_string))
+
         cursor.execute("select default_billing_address from persons \
-                        where id = :input_id", input_id = self.get_id())
+                        where id = :input_id and address_type_id = :input_type", \
+                        input_id = self.get_id(), input_type = type_id)
 
         address_id = cursor.fetchone()
+
         database.close(db)
 
-        if address:
-            address = address.Address(address_id[0])
+        if address_id:
+            address_reference = address.Address(address_id[0])
         else:
-            address = 
-
+            address_reference = None
+        return address_reference
 
     # Modify Methods
 
-    def modify_status(self, new_status):
-        db = cx_Oracle.connect("system", "oracle")
-        cursor = db.cursor()
+    def modify_first_name(self, new_first_name):
+        db = database.connect()
+        cursor = database.get_cursor(db)
+        cursor.execute("update persons \
+                        set first_name = :input_name \
+                        where id = :input_id",  \
+                        input_name = str(new_first_name), input_id = self.get_id())
+        database.commit(db)
+        database.close(db)
 
-        cursor.execute("select id from order_statuses where order_status = :input_status", \
-                        input_status = new_status)
-        status_id_tuple = cursor.fetchone()
+    def modify_middle_initial(self, new_middle_initial):
+        db = database.connect()
+        cursor = database.get_cursor(db)
+        cursor.execute("update persons \
+                        set middle_initial = :input_name \
+                        where id = :input_id",  \
+                        input_name = str(new_middle_initial), input_id = self.get_id())
+        database.commit(db)
+        database.close(db)
 
-        if status_id_tuple:
-            status_id = status_id_tuple[0]
-            cursor.execute("update orders set status_id = :input_status \
-                            where id = :input_id", \
-                            input_status = status_id, input_id = self.get_id())
-            db.commit()
+    def modify_last_name(self, new_last_name):
+        db = database.connect()
+        cursor = database.get_cursor(db)
+        cursor.execute("update persons \
+                        set last_name = :input_name \
+                        where id = :input_id",  \
+                        input_name = str(new_last_name), input_id = self.get_id())
+        database.commit(db)
+        database.close(db)
+
+    def modify_password(self, new_password):
+        db = database.connect()
+        cursor = database.get_cursor(db)
+        hashed_password = hash_password(self.get_username(), new_password)
+        cursor.execute("update persons \
+                        set password = :input_pw \
+                        where id = :input_id",  \
+                        input_pw = hashed_password, input_id = self.get_id())
+        database.commit(db)
+        database.close(db)
+    
+    def modify_salary(self, new_salary):
+        db = database.connect()
+        cursor = database.get_cursor(db)
+
+        if not isinstance(new_salary, (int, float)):
+            raise ValueError("Given salary (%s) is not numeric type" %str(new_salary))
+        if new_salary < 0:
+            raise ValueError("Given salary (%s) is invalid amount" %str(new_salary))
+
+        cursor.execute("update persons \
+                        set salary = :input_salary \
+                        where id = :input_id",  \
+                        salary = new_salary, input_id = self.get_id())
+        database.commit(db)
+        database.close(db)
+    
+    def modify_job_title(self, new_title):
+        db = database.connect()
+        cursor = database.get_cursor(db)
+        cursor.execute("update persons \
+                        set job_title = :input_title \
+                        where id = :input_id",  \
+                        input_name = str(new_title), input_id = self.get_id())
+        database.commit(db)
+        database.close(db)
+
+    def check_password(self, password):
+        # give password on person instance, get T/F response
+        db = database.connect()
+        cursor = database.get_cursor(db)
+        
+        cursor.execute("select password from persons where id = :inpit_id", \
+                        input_id = self.get_id())
+        
+        hashed_password = cursor.fetchone()
+        database.close(db)
+        
+        if hashed_password:
+            hashed_password = hashed_password[0]
         else:
-            print("Status is not valid order status string. \nString given: %s" %(new_status))
-        db.close()
+            raise ValueError("This person reference did not map to the table for some reason")
 
-    def modify_shipping_address(self, new_address):
-        db = cx_Oracle.connect("system", "oracle")
-        cursor = db.cursor()
-
-        if isinstance(new_address, address.Address):
-            cursor.execute("update orders set shipping_addr_id = :input_ship_id \
-                            where id = :input_id", \
-                            input_ship_id = new_address.get_id(), input_id = self.get_id()) 
-            db.commit()
+        if hashed_password = hash_password(self.get_username(), password):
+            # input password is valid
+            return True
         else:
-            print("Requires valid address to set shipping address")
-        db.close()
-
-    def modify_billing_address(self, new_address):
-        db = cx_Oracle.connect("system", "oracle")
-        cursor = db.cursor()
-
-        if isinstance(new_address, address.Address):
-            cursor.execute("update orders set billing_addr_id = :input_bill_id \
-                            where id = :input_id", \
-                            input_bill_id = new_address.get_id(), input_id = self.get_id()) 
-            db.commit()
+            # input password is invalid
+            return False
+    
+    @staticmethod
+    def check_credentials(username, password):
+        # Credential check -- give user/password, return user instance or None
+        db = database.connect()
+        cursor = database.get_cursor(db)
+        hashed_password = hash_password(username, password)
+        cursor.execute("select id from persons \
+                        where username = :input_username and password = :input_pw", \
+                        input_username = username, input_pw = hashed_password)
+        person_id = cursor.fetchone()
+        database.close(db)
+        if person_id:
+            # Credentials had a match
+            person_reference = Person(person_id[0])
         else:
-            print("Requires valid address to set billing address")
-        db.close()
+            # Credentials didn't match
+            person_reference = None
 
-    def add_product(self, new_product):
-        db = cx_Oracle.connect("system", "oracle")
-        cursor = db.cursor()
+        return person_reference
 
-        if isinstance(new_product, product.Product):
-            current_quantity = self.get_product_quantity(product)
-            if current_quantity == 0:
-                # Product not yet in order
-                cursor.execute("insert into order_to_product \
-                                (order_id, product_id) values (:input_oid, :input_pid)", \
-                                input_oid = self.get_id(), input_pid = new_product.get_id())
-                db.commit()
-            else:
-                # Product already in order, incriment quantity
-                cursor.execute("update order_to_product set quantity = :input_quantity \
-                                where order_id = :input_oid and product_id = :input_pid", \
-                                input_quantity = (current_quantity + 1), \
-                                input_oid = self.get_id(), input_pid = new_product.get_id())
-                db.commit()
-        else:
-            print("new product must be a product instance")
-        db.close()
-
-    def remove_product(self, product):
-        db = cx_Oracle.connect("system", "oracle")
-        cursor = db.cursor()
-
-        if isinstance(product, product.Product):
-            current_quantity = self.get_product_quantity(product)
-            if current_quantity > 1:
-                # Product already in order, decriment quantity
-                cursor.execute("update order_to_product set quantity = :input_quantity \
-                                where order_id = :input_oid and product_id = :input_pid", \
-                                input_quantity = (current_quantity - 1), \
-                                input_oid = self.get_id(), input_pid = product.get_id())
-                db.commit()
-            elif current_quantity == 1:
-                # Only one product exists, remove row from DB
-                cursor.execute("delete from order_to_product \
-                                where order_id = :input_oid and product_id = :input_pid", \
-                                input_oid = self.get_id(), input_pid = product.get_id())
-                db.commit()
-            else:
-                print("Product does not exist in order, doing nothing")
-        else:
-            print("product must be a product instance")
-        db.close()
-
-    def change_product_quantity(self, product, new_quantity):
-        db = cx_Oracle.connect("system", "oracle")
-        cursor = db.cursor()
-
-        if isinstance(new_quantity, int) and new_quantity >= 0:
-            
-            if isinstance(product, product.Product):
-                if new_quantity == 0:
-                    # Remove product from table
-                    cursor.execute("delete from order_to_product \
-                                    where order_id = :input_oid and product_id = :input_pid", \
-                                    input_oid = self.get_id(), input_pid = product.get_id())
-                    db.commit()
-                else:
-                    current_quantity = self.get_product_quantity(product)
-                    if current_quantity != 0:
-                        # Product already exists, just update its quantity
-                        cursor.execute("update order_to_product set quantity = :input_quantity \
-                                        where order_id = :input_oid and product_id = :input_pid", \
-                                        input_quantity = new_quantity, \
-                                        input_oid = self.get_id(), input_pid = product.get_id())
-                        db.commit()
-                    else:
-                        # Product doesn't exist, add new row
-                        cursor.execute("insert into order_to_product \
-                                        (order_id, product_id, quantity) \
-                                        values (:input_oid, :input_pid, :input_quantity", \
-                                        input_quantity = new_quantity, \
-                                        input_oid = self.get_id(), input_pid = product.get_id())
-                        db.commit()
-            else:
-                print("product to change quantity must be valid product in products table")
-        else:
-            print("specified quantity must be int >= 0 \nquantity given: %i" %(new_quantity))
-        db.close()
-
-    def set_submission_date(self):
-        # Sets submission date to now
-        db = cx_Oracle.connect("system", "oracle")
-        cursor = db.cursor()
-        cursor.execute("update orders set submission_date = :input_date where id = :input_id", \
-                        input_date = datetime.datetime.now(), input_id = self.get_id())
-        db.commit()
-        db.close()
+    # Helper Methods
 
     def hash_password(username, password):
         return (hashlib.md5(username.encode('utf-8') + password.encode('utf-8').hexdigest())
