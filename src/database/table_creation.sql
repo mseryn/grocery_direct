@@ -82,6 +82,7 @@ create table addresses
     zip_code        integer not null,
     state_code_id   integer not null,
     address_type_id integer not null,
+    person_id       integer,
     constraint      state_code_fk   foreign key (state_code_id) references state_codes(id),
     constraint      address_type_fk foreign key (address_type_id)  references address_types(id)
 );
@@ -109,6 +110,8 @@ create table persons
     constraint      default_warehouse_addr_fk  foreign key (default_warehouse_address) references addresses(id),
     constraint      default_supplier_addr_fk   foreign key (default_supplier_address)  references addresses(id)
 );
+
+alter table addresses add constraint person_fk foreign key (person_id) references persons(id);
 
 create table orders
 (

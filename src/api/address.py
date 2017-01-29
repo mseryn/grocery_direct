@@ -32,6 +32,9 @@
 
 import cx_Oracle
 
+import database
+import person
+
 # Starting up interaction with database:
 db = cx_Oracle.connect('system', 'oracle')
 cursor = db.cursor()
@@ -56,6 +59,23 @@ class Address():
 
     def get_id(self):
         return self._id
+
+    def get_person(self):
+        db = database.connect()
+        cursor = database.get_cursor(db)
+
+        cursor.execute("select person_id from addresses \
+                        where id = :input_id", \
+                        input_id = self.get_id())
+        person_id = cursor.fetchone()
+        database.close(db)
+
+        if person_id:
+            person_reference = person.Person(person_id[0])
+        else:
+            person_reference = None
+        return person_reference
+
 
     def get_address_string(self):
         apt_no = self.get_apartment_no()

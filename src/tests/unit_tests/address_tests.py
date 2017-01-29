@@ -30,6 +30,7 @@
 #***
 
 import address
+import person
 
 # Default strings for tests
 TEST_STREET         = "123 Test St."
@@ -38,6 +39,25 @@ TEST_CITY           = "Test City"
 TEST_STATE_CODE     = "AZ"
 TEST_ZIP_CODE       = 12345
 TEST_TYPE_STRING    = "shipping"
+
+#**************************************************************************************************
+#**  ADDRESS: PERSON
+#**************************************************************************************************
+
+def test_address_get_null_person():
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+        TEST_TYPE_STRING)
+    assert(test_address.get_person().get_id() == None), "get_person did not correctly return \
+        null for default for address"
+
+def test_address_add_person():
+    test_person = person.Person.new_person("testuser", "testpassword", "Test", "Person", \
+       "customer")
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+        TEST_TYPE_STRING)
+    test_address.add_person(test_person)
+    assert(test_address.get_person().get_id() == test_person.get_id()), "get and add person did \
+        not correctly function for address"
 
 #**************************************************************************************************
 #**  ADDRESS: STREET
