@@ -28,8 +28,6 @@
 #*      -- zip code
 #*      -- type
 #***
-
-
 import database
 import person
 
@@ -51,7 +49,99 @@ class Address():
             print("Given ID not an int, id: %s" %str(given_id))
         database.close()
             
-    # TODO: where is new_address()?
+    def new_address(street, city, zip_code, state_code, type_string, input_person = None, \
+        credit_card = None, apt_no = None)
+        db = database.connect()
+        cursor = database.get_cursor(db)
+
+        # Checking input types
+        if not isinstance(zip_code, int):
+            raise ValueError("Zip code given (%s) not int" %str(zip_code))
+        if zip_code > 100000 or zip_code < 0:
+            raise ValueError("Zip code given (%i) out of range" %zip_code)
+
+        # Getting type id from type_string
+        cursor.execute("select id from address_types where address_type = :input_type", \
+                        input_type = type_string)
+        type_id = cursor.fetchone()
+        if type_id:
+            type_id = type_id[0]
+        else:
+            raise ValueError("Type string given (%s) not valid address type." %(type_string))
+
+        # Getting state id from state_code
+        cursor.execute("select id from state_codes where state_code = :input_code", \
+                        input_code = str(state_code))
+        state_id = cursor.fetchone()
+        if state_id:
+            state_id = state_id[0]
+        else:
+            raise ValueError("State code given (%s) not valid state code" %(str(state_code)))
+
+        # Getting peson id from person if specified
+        if input_person:
+            cursor.execute("select id from persons where id = :input_person_id", \
+                            input_person_id = input_person.get_id())
+            person_id = cursor.fetchone()
+            if person_id:
+                person_id = person_id[0]
+            else:
+                raise ValueError("Person reference passed to address not in persons table.")
+
+        # TODO: get credit card ID once credit card implemented
+
+        returned_id = returned_id = cursor.var(database.cx_Oracle.NUMBER)
+
+        # Making new row in addresses table
+        if apt_no:
+            if person_id:
+                cursor.execute("insert into addresses \
+                                (street, apartment_no, city, zip_code, state_code_id, \
+                                address_type_id, person_id) \
+                                values (:input_street, :input_apt_no, :input_city, :input_zip, \
+                                :input_state, :input_type, :input_person) \
+                                returning id into :output_id", \
+                                input_street = street, input_apt_no = apt_no, input_city = city, \
+                                input_zip = zip_code, input_state = state_id, input_type = type_id, \
+                                input_person = person_id, output_id = returned_id)
+                database.commit(db)
+            elif not person_id:
+                cursor.execute("insert into addresses \
+                                (street, apartment_no, city, zip_code, state_code_id, \
+                                address_type_id) \
+                                values (:input_street, :input_apt_no, :input_city, :input_zip, \
+                                :input_state, :input_type) \
+                                returning id into :output_id", \
+                                input_street = street, input_apt_no = apt_no, input_city = city, \
+                                input_zip = zip_code, input_state = state_id, input_type = type_id, \
+                                output_id = returned_id)
+                database.commit(db)
+        elif not apt_no:
+            if person_id:
+                cursor.execute("insert into addresses \
+                                (street, city, zip_code, state_code_id, \
+                                address_type_id, person_id) \
+                                values (:input_street, :input_city, :input_zip, \
+                                :input_state, :input_type, :input_person) \
+                                returning id into :output_id", \
+                                input_street = street, input_city = city, \
+                                input_zip = zip_code, input_state = state_id, input_type = type_id, \
+                                input_person = person_id, output_id = returned_id)
+                database.commit(db)
+            elif not person_id:
+                cursor.execute("insert into addresses \
+                                (street, city, zip_code, state_code_id, \
+                                address_type_id) \
+                                values (:input_street, :input_city, :input_zip, \
+                                :input_state, :input_type) \
+                                returning id into :output_id", \
+                                input_street = street, input_city = city, \
+                                input_zip = zip_code, input_state = state_id, input_type = type_id, \
+                                output_id = returned_id)
+                database.commit(db)
+
+        database.close()
+        return Address(returned_id)
 
     # Get Methods
 
