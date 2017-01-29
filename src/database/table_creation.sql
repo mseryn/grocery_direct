@@ -15,8 +15,8 @@ drop table products ;
 drop table product_images ;
 drop table credit_cards ;
 drop table orders ;
-drop table persons ;
 drop table addresses ;
+drop table persons ;
 
 drop table card_types ;
 drop table state_codes ;
@@ -72,22 +72,6 @@ create table card_types
  * Primary Tables
 */
 
-
-create table addresses
-(
-    id              integer generated always as identity primary key,
-    street          varchar(255) not null,
-    apartment_no    varchar(255),
-    city            varchar(255) not null,
-    zip_code        integer not null,
-    state_code_id   integer not null,
-    address_type_id integer not null,
-    person_id       integer,
-    constraint      state_code_fk   foreign key (state_code_id) references state_codes(id),
-    constraint      address_type_fk foreign key (address_type_id)  references address_types(id)
-);
-
-
 create table persons 
 (
     id              integer generated always as identity primary key,
@@ -99,19 +83,27 @@ create table persons
     salary          numeric(8, 2),
     job_title       varchar(20),
     balance         numeric(8, 2),
-    default_billing_address     integer,
-    default_shipping_address    integer,
-    default_warehouse_address   integer,
-    default_supplier_address    integer,
     person_type_id  integer,
-    constraint      person_type_fk foreign key (person_type_id) references person_types(id),
-    constraint      default_billing_addr_fk    foreign key (default_billing_address)   references addresses(id),
-    constraint      default_shipping_addr_fk   foreign key (default_shipping_address)  references addresses(id),
-    constraint      default_warehouse_addr_fk  foreign key (default_warehouse_address) references addresses(id),
-    constraint      default_supplier_addr_fk   foreign key (default_supplier_address)  references addresses(id)
+    constraint      person_type_fk foreign key (person_type_id) references person_types(id)
 );
 
-alter table addresses add constraint person_fk foreign key (person_id) references persons(id);
+create table addresses
+(
+    id              integer generated always as identity primary key,
+    street          varchar(255) not null,
+    apartment_no    varchar(255),
+    city            varchar(255) not null,
+    zip_code        integer not null,
+    state_code_id   integer not null,
+    address_type_id integer not null,
+    person_id       integer,
+    default_flag    integer default null,
+    constraint      default_flag_vals   check ((default_flag = null) or (default_flag = 1)),
+    constraint      uniqueness_of_flag  unique (person_id, default_flag, address_type_id),
+    constraint      person_fk_for_addr  foreign key (person_id) references persons(id),
+    constraint      state_code_fk       foreign key (state_code_id) references state_codes(id),
+    constraint      address_type_fk     foreign key (address_type_id)  references address_types(id)
+);
 
 create table orders
 (
@@ -217,6 +209,5 @@ create table supplier_to_product
 );
 
 select * from DUAL;
-
 
 /*TODO*/
