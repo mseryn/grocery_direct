@@ -25,7 +25,7 @@ state_codes = []
 card_types = []
 
 # Connecting to DB
-db = cx_Oracle.connect('system','oracle')
+db = cx_Oracle.connect('grocerydirect','oracle')
 cursor = db.cursor()
 
 # Erasing all enum tables
