@@ -60,6 +60,31 @@ def test_address_add_person():
         not correctly function for address"
 
 #**************************************************************************************************
+#**  ADDRESS: DEFAULT FLAG
+#**************************************************************************************************
+
+def test_address_get_default_flag():
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+        TEST_TYPE_STRING)
+    assert(test_address.get_default_flag() == False), \
+        "default flag did not return False for unmodified address"
+
+def test_address_set_default():
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+        TEST_TYPE_STRING)
+    test_address.set_default_flag(True)
+    assert(test_address.get_default_flag() == True), \
+        "set default flag failed to modify flag to True for address without person"
+
+def test_address_remove_default():
+    test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
+        TEST_TYPE_STRING)
+    test_address.set_default_flag(True)
+    test_address.set_default_flag(False)
+    assert(test_address.get_default_flag() == False), \
+        "set default flag failed to modify flag to False for address without person"
+
+#**************************************************************************************************
 #**  ADDRESS: STREET
 #**************************************************************************************************
 

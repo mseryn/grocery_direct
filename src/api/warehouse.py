@@ -38,7 +38,7 @@ class Warehouse():
                 print("Given ID not in warehouses table, id: %i" %given_id)
         else:
             print("Given ID not an int, id: %s" %str(given_id))
-        database.close(db)
+        database.disconnect(db)
 
     @staticmethod
     def new_warehouse(capacity, street, city, state_string, zip_code, apartment_no = None):
@@ -61,7 +61,7 @@ class Warehouse():
 
         returned_id = int(returned_id.getvalue())
 
-        database.close(db)
+        database.disconnect(db)
         return Warehouse(returned_id)
 
     # Get Methods
@@ -74,7 +74,7 @@ class Warehouse():
         cursor = database.get_cursor(db)
         cursor.execute("select capacity from warehouses where id = :warehouse_id", \
                         warehouse_id = self.get_id())
-        database.close(db)
+        database.disconnect(db)
         return cursor.fetchone()[0]
 
     def get_stock(self):
@@ -89,7 +89,7 @@ class Warehouse():
         if product_list:
             for product_id in product_list:
                 stock.append(product.Product(int(product_id[0])))
-        database.close(db)
+        database.disconnect(db)
         return stock
 
     def get_product_quantity(self, product):
@@ -113,7 +113,7 @@ class Warehouse():
         total_used_space = 0
         for product in self.get_stock():
             total_used_space += product.get_size() * self.get_product_quantity(product)
-        database.close(db)
+        database.disconnect(db)
         return self.get_capacity() - total_used_space
 
     def get_address(self):
@@ -124,12 +124,12 @@ class Warehouse():
         returned_id = cursor.fetchone()
         if returned_id:
             returned_id = returned_id[0]
-            database.close(db)
+            database.disconnect(db)
             if isinstance(returned_id, int):
                 warehouse_address = address.Address(returned_id)
                 return warehouse_address
         else:
-            database.close(db)
+            database.disconnect(db)
             return None
 
     # Modification Methods
@@ -144,15 +144,15 @@ class Warehouse():
                                     where id = :warehouse_id", input_capacity = int(new_capacity), \
                                     warehouse_id = self.get_id())
                     database.commit(db)
-                    database.close(db)
+                    database.disconnect(db)
                 else:
-                    database.close(db)
+                    database.disconnect(db)
                     print("New capacity must be >= remaining capacity")
             else:
-                database.close(db)
+                database.disconnect(db)
                 print("Capacity must be >=0")
         else:
-            database.close(db)
+            database.disconnect(db)
             print("New capacity must be integer \nInput capacity: %s" %(str(new_capacity)))
 
     def add_product(self, new_product):
@@ -171,14 +171,14 @@ class Warehouse():
                             input_quantity = incrimented_quantity, input_pid = product_id, \
                             input_wid = self.get_id())
             database.commit(db)
-            database.close(db)
+            database.disconnect(db)
         else:
             # The item is not yet in the warehouse's stock, so add it to the table
             cursor.execute("insert into warehouse_to_product (product_id, warehouse_id, quantity) \
                             values (:input_pid, :input_wid, :input_quantity)", \
                             input_pid = product_id, input_wid = self.get_id(), input_quantity = 1)
             database.commit(db)
-            database.close(db)
+            database.disconnect(db)
 
     def remove_product(self, product):
         db = database.connect()
@@ -208,7 +208,7 @@ class Warehouse():
         else:
             # The item is not yet in the warehouse's stock, so do nothing
             pass
-        database.close(db)
+        database.disconnect(db)
 
     def modify_quantity(self, product, new_quantity):
         db = database.connect()
@@ -241,4 +241,4 @@ class Warehouse():
                     database.commit(db)
         else:
             print("new quantity must be positive integer value")
-        database.close(db)
+        database.disconnect(db)

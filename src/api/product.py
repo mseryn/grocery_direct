@@ -103,7 +103,7 @@ class Product():
         cursor = database.get_cursor(db)
         cursor.execute("select name from products where id=:product_id", product_id = self._id)
         name =  cursor.fetchone()[0]
-        database.close(db)
+        database.disconnect(db)
         return name
 
     def get_type(self):
@@ -114,7 +114,7 @@ class Product():
                         from products join product_types on products.product_type_id = product_types.id \
                         where products.id = :product_id", product_id = self._id)
         type_string = cursor.fetchone()[0]
-        database.close(db)
+        database.disconnect(db)
         return type_string
 
     def get_description(self):
@@ -122,7 +122,7 @@ class Product():
         cursor = database.get_cursor(db)
         cursor.execute("select description from products where id = :product_id", product_id = self._id)
         description = cursor.fetchone()[0]
-        database.close(db)
+        database.disconnect(db)
         return description
 
     def get_nutrition_facts(self):
@@ -130,7 +130,7 @@ class Product():
         cursor = database.get_cursor(db)
         cursor.execute("select nutrition_facts from products where id = :product_id", product_id = self._id)
         nutrition_facts = cursor.fetchone()[0]
-        database.close(db)
+        database.disconnect(db)
         return nutrition_facts
 
     def get_alcohol_content(self):
@@ -138,7 +138,7 @@ class Product():
         cursor = database.get_cursor(db)
         cursor.execute("select alcohol_content from products where id = :product_id", product_id = self._id)
         alcohol_content = cursor.fetchone()[0]
-        database.close(db)
+        database.disconnect(db)
         return alcohol_content
 
     def get_price_per_state(self, state_code):
@@ -155,19 +155,19 @@ class Product():
             price = cursor.fetchone()
             # If yes to both above conditions, return a price (ensuring it's a valid price), otherwise return -1.0 (sentianl)
             if price:
-                database.close(db)
+                database.disconnect(db)
                 return price[0]
             else:
-                database.close(db)
+                database.disconnect(db)
                 return -1
-        database.close(db)
+        database.disconnect(db)
 
     def get_size(self):
         db = database.connect()
         cursor = database.get_cursor(db)
         cursor.execute("select product_size from products where id = :product_id", product_id = self._id)
         size = cursor.fetchone()[0]
-        database.close(db)
+        database.disconnect(db)
         return size
 
     # Modification Methods
@@ -179,7 +179,7 @@ class Product():
             cursor.execute("update products set name = :name_string where id = :product_id", name_string = new_name, \
                 product_id = self.get_id())
         database.commit(db)
-        database.close(db)
+        database.disconnect(db)
 
     def modify_type(self, type_string):
         # Verify it's a valid type (in the table) - selection should return nothing if type invalid
@@ -194,7 +194,7 @@ class Product():
             self.modify_nutrition_facts(None)
             self.modify_alcohol_content(None)
         # else do nothing -- possibly eventually return error here
-        database.close(db)
+        database.disconnect(db)
 
     def modify_description(self, input_description):
         db = database.connect()
@@ -224,7 +224,7 @@ class Product():
                 cursor.execute("update products set nutrition_facts = :new_nutrition_facts where id = :product_id", \
                     new_nutrition_facts = DEFAULT_NUTRITION_FACTS, product_id = self._id)
                 database.commit(db)
-        database.close(db)
+        database.disconnect(db)
 
 
     def modify_alcohol_content(self, alcohol_content):
@@ -243,7 +243,7 @@ class Product():
             cursor.execute("update products set alcohol_content = :new_alcohol_content where id = :product_id", \
                 new_alcohol_content = DEFAULT_NON_ALCOHOLIC_CONTENT, product_id = self._id)
             database.commit(db)
-        database.close(db)
+        database.disconnect(db)
 
     def modify_price_per_state(self, state_code, new_price):
         # First must ensure state code in state code table
@@ -269,7 +269,7 @@ class Product():
                     cursor.execute("insert into state_to_product (state_id, product_id, state_price) \
                         values (:s_id, :p_id, :price)", s_id = state_id, p_id = self.get_id(), price = new_price)
                     database.commit(db)
-        database.close(db)
+        database.disconnect(db)
 
     def modify_size(self, new_size):
         # ensuring it's a number:
@@ -279,4 +279,4 @@ class Product():
             cursor.execute("update products set product_size = :psize where id = :product_id", \
                 psize = new_size, product_id = self.get_id())
             database.commit(db)
-        database.close(db)
+        database.disconnect(db)

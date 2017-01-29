@@ -47,10 +47,12 @@ class Address():
                 print("Given ID not in addresses table, id: %i" %given_id)
         else:
             print("Given ID not an int, id: %s" %str(given_id))
-        database.close()
+        database.disconnect()
             
-    def new_address(street, city, zip_code, state_code, type_string, input_person = None, \
-        credit_card = None, apt_no = None)
+    @staticmethod
+    def new_address(street, city, state_code, zip_code, type_string, input_person = None, \
+        credit_card = None, apt_no = None):
+
         db = database.connect()
         cursor = database.get_cursor(db)
 
@@ -79,6 +81,7 @@ class Address():
             raise ValueError("State code given (%s) not valid state code" %(str(state_code)))
 
         # Getting peson id from person if specified
+        person_id = None
         if input_person:
             cursor.execute("select id from persons where id = :input_person_id", \
                             input_person_id = input_person.get_id())
@@ -141,7 +144,7 @@ class Address():
                 database.commit(db)
 
         returned_id = returned_id.getvalue()
-        database.close()
+        database.disconnect(db)
         return Address(returned_id)
 
     # Get Methods
@@ -157,7 +160,7 @@ class Address():
                         where id = :input_id", \
                         input_id = self.get_id())
         person_id = cursor.fetchone()
-        database.close(db)
+        database.disconnect(db)
 
         if person_id:
             person_reference = person.Person(person_id[0])
@@ -181,7 +184,7 @@ class Address():
         cursor.execute("select street from addresses where id = :address_id", \
                         address_id = self.get_id())
         street = cursor.fetchone()[0]
-        database.close(db)
+        database.disconnect(db)
         return street
 
     def get_apartment_no(self):
@@ -190,7 +193,7 @@ class Address():
         cursor.execute("select apartment_no from addresses where id = :address_id", \
                         address_id = self.get_id())
         returned_apt_no = cursor.fetchone()
-        database.close(db)
+        database.disconnect(db)
         if returned_apt_no:
             return returned_apt_no[0]
         else:
@@ -202,7 +205,7 @@ class Address():
         cursor.execute("select city from addresses where id = :address_id", \
                         address_id = self.get_id())
         city = cursor.fetchone()[0]
-        database.close(db)
+        database.disconnect(db)
         return street
     
     def get_zip_code(self):
@@ -211,7 +214,7 @@ class Address():
         cursor.execute("select zip_code from addresses where id = :address_id", \
                         address_id = self.get_id())
         zip_code = cursor.fetchone()[0]
-        database.close(db)
+        database.disconnect(db)
         return zip_code
     
     def get_state(self):
@@ -222,7 +225,7 @@ class Address():
                         from state_codes join addresses on state_codes.id = addresses.state_code_id \
                         where addresses.id = :address_id", \
                         address_id = self.get_id())
-        database.close(db)
+        database.disconnect(db)
         return cursor.fetchone()[0]
 
     def get_type(self):
@@ -235,7 +238,7 @@ class Address():
                         where addresses.id = :address_id", \
                         address_id = self.get_id())
         type_string =  cursor.fetchone()[0]
-        database.close(db)
+        database.disconnect(db)
         return type_string
 
 
@@ -249,7 +252,7 @@ class Address():
                         where id = :address_id",
                         input_street = new_street, address_id = self.get_id())
         database.commit(db)
-        database.close(db)
+        database.disconnect(db)
 
     def modify_apartment_no(self, new_apt):
         db = database.connect()
@@ -260,7 +263,7 @@ class Address():
                             where id = :address_id",
                             input_apt = new_apt, address_id = self.get_id())
             database.commit(db)
-        database.close(db)
+        database.disconnect(db)
     
     def modify_city(self, new_city):
         db = database.connect()
@@ -280,11 +283,11 @@ class Address():
                             where id = :address_id", \
                             input_zip = new_zip, address_id = self.get_id())
             database.commit(db)
-            database.close(db)
+            database.disconnect(db)
         else:
             print("Zip code must be a positive 5-digit int. \
                 \nInput zip: %s \nInput type: %s" %(str(new_zip), type(new_zip).__name__))
-            database.close(db)
+            database.disconnect(db)
 
     def modify_state(self, new_state):
         db = database.connect()
@@ -300,11 +303,11 @@ class Address():
                             where id = :address_id", \
                             input_state = state_id, address_id = self.get_id())
             database.commit(db)
-            database.close(db)
+            database.disconnect(db)
         else:
             print("State code given not found in list of state codes. \nState given: %s" \
                 %(new_state))
-            database.close(db)
+            database.disconnect(db)
     
     def modify_type(self, new_type):
         db = database.connect()
@@ -321,62 +324,9 @@ class Address():
                             where id = :address_id", \
                             input_type = type_id, address_id = self.get_id())
             database.commit(db)
-            database.close(db)
+            database.disconnect(db)
         else:
             print("Address type not found in list of address types. \nType given: %s" \
                 %(new_type))
-            database.close(db)
-
-    @staticmethod
-    def new_address(street, city, state_string, zip_code, type_string, apt_no = None):
-        # Inserts a new address into the database
-        # Returns Address reference to new address
-        db = database.connect()
-        cursor = database.get_cursor(db)
-
-        # Getting type_id from type_string
-        cursor.execute("select id from address_types where address_type = :input_type", \
-            input_type = type_string)
-        type_id = cursor.fetchone()
-
-        # Getting state_id from state_string
-        cursor.execute("select id from state_codes where state_code = :input_state", \
-            input_state = state_string)
-        state_id = cursor.fetchone()
-
-        # Ensuring both state and type IDs exist and are ints
-        if type_id and state_id:
-            type_id = type_id[0]
-            state_id = state_id[0]
-            if isinstance(type_id, int) and isinstance(state_id, int):
-                # Making a variable to hold ID of new address
-                returned_id = cursor.var(cx_Oracle.NUMBER)
-
-                # If apartment_no specified, use first statement. Otherwise, use second.
-                if apt_no:
-                    cursor.execute("insert into addresses \
-                        (street, apartment_no, city, zip_code, state_code_id, address_type_id) \
-                        values (:input_street, :input_apt, :input_city, :input_zip, :input_state, \
-                        :input_type) \
-                        returning id into :new_address_id", \
-                        input_street = street, input_apt = apt_no, input_city = city, \
-                        input_zip = zip_code, input_state = state_id, input_type = type_id, \
-                        new_address_id = returned_id)
-                else:
-                    cursor.execute("insert into addresses \
-                        (street, city, zip_code, state_code_id, address_type_id) \
-                        values (:input_street, :input_city, :input_zip, :input_state, :input_type) \
-                        returning id into :new_address_id", \
-                        input_street = street, input_city = city, \
-                        input_zip = zip_code, input_state = state_id, input_type = type_id, \
-                        new_address_id = returned_id)
-
-                # Committing changes to DB and collecting return variable
-                database.commit(db)
-                return Address(int(returned_id.getvalue()))
-        else:
-            print("Input type and/or state did not return against DB. \
-                \nType string: %s \nState string: %s" %(type_string, state_string))
-        database.close(db)
-
+            database.disconnect(db)
 

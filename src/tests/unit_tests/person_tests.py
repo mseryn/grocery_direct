@@ -39,6 +39,7 @@
 #*      -- balance (customer only)
 #***
 
+import address
 import person
 import order
 
@@ -78,7 +79,7 @@ SHIP_ADDRESS = address.Address.new_address(SHIP_STREET, SHIP_CITY, SHIP_STATE_CO
 BILL_ADDRESS = address.Address.new_address(BILL_STREET, BILL_CITY, BILL_STATE_CODE, \
                 BILL_ZIP_CODE, BILL_TYPE_STRING)
 TEST_PERSON  = person.Person.new_person(USERNAME, PASSWORD, FNAME, LNAME, "customer", \
-                    middle_initial = MIDDLE_INITIAL)
+                    middle_initial = MIDDLE_INIT)
 TEST_STAFF   = person.Person.new_person("teststaff", PASSWORD, FNAME, LNAME, "staff", \
                     salary = SALARY, job_title = JOB_TITLE)
 
@@ -87,7 +88,7 @@ TEST_STAFF   = person.Person.new_person("teststaff", PASSWORD, FNAME, LNAME, "st
 #**************************************************************************************************
 
 def person_check_user_pw():
-    assert(test_person.test_credentials(USERNAME, PASSWORD) == True), \
+    assert(test_person.test_credentials(USERNAME, PASSWORD).get_id() == test_person.get_id()), \
         "test_credentials() did not correctly return True given valid inputs for person"
 
 def person_get_username():
@@ -95,11 +96,11 @@ def person_get_username():
         "get_username() did not return username for person"
 
 def person_check_password():
-    assert(test_person.check_password(PASSWORD) == True) \
+    assert(test_person.check_password(PASSWORD) == True), \
         "check_password() did not return True when given correct password for person"
 
 def person_check_password_invalid():
-    assert(test_person.check_password("not valid password") == False) \
+    assert(test_person.check_password("not valid password") == False), \
         "check_password() did not return False when given incorrect password for person"
 
 # Manipulating username
@@ -113,7 +114,7 @@ def person_modify_username():
 def person_modify_username_with_nonunique_new_username():
     # unsuccessfully modify own username with non-unique new username
     new_test_person = person.Person.new_person("second test person", PASSWORD, FNAME, LNAME, \
-        middle_initial = MIDDLE_INITIAL)
+        middle_initial = MIDDLE_INIT)
     new_test_person.modify_username(USERNAME)
     assert(test_person.get_username() == "second test person"), \
         "modify_username allowed username to be set to non-unique value for person"
@@ -247,17 +248,6 @@ def person_get_type():
     # successfully retrieve type for person
     assert(TEST_STAFF.get_type() == "staff"), \
         "get_type failed to return type for person"
-
-#**************************************************************************************************
-# ADDRESS
-#**************************************************************************************************
-
-def get_addresses():
-    pass
-def remove_address():
-    pass
-def add_address():
-    pass
 
 #**************************************************************************************************
 # ORDERS

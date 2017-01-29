@@ -61,7 +61,7 @@ class Person():
         else:
             print("Given ID not an int, id: %s" %str(given_id))
 
-        database.close(db)
+        database.disconnect(db)
 
     @staticmethod
     def new_person(username, password, first_name, last_name, type_string, middle_initial = None):
@@ -76,27 +76,29 @@ class Person():
         type_id = cursor.fetchone()
         if type_id:
             type_id = type_id[0]
+        else:
+            raise ValueError("Type given (%s) not valid person type" %str(type_string))
 
         hashed_password = hash_password(username, password)
             
-        if type_id and middle_initial:
+        if middle_initial:
             cursor.execute("insert into persons \
                             (username, password, first_name, middle_initial, last_name, \
                             person_type_id) \
                             values (:input_username, :input_password, \
-                            :input_first, :input_middle, :input_last, :input_type_id)
+                            :input_first, :input_middle, :input_last, :input_type_id) \
                             returning id into :output_id", \
                             input_username = username, input_password = hashed_password, \
                             input_first = first_name, input_middle = middle_name, \
                             input_last = last_name, input_type_id = type_id, \
                             output_id = returned_id)
             database.commit(db)
-        elif type_id and not middle_initial:
+        else:
             cursor.execute("insert into persons \
                             (username, password, first_name, last_name, \
                             person_type_id) \
                             values (:input_username, :input_password, \
-                            :input_first, :input_last, :input_type_id)
+                            :input_first, :input_last, :input_type_id) \
                             returning id into :output_id", \
                             input_username = username, input_password = hashed_password, \
                             input_first = first_name, \
@@ -105,7 +107,7 @@ class Person():
             database.commit(db)
                             
         returned_id = returned_id.getvalue()
-        database.close(db)
+        database.disconnect(db)
         return Person(returned_id)
 
     # Get Methods
@@ -121,7 +123,7 @@ class Person():
                         where persons.id = :input_id", \
                         input_id = self.get_id())
         type_string = cursor.fetchone()[0]
-        database.close(db)
+        database.disconnect(db)
         return type_string
 
     def get_first_name(self):
@@ -131,7 +133,7 @@ class Person():
                         from persons where persons.id = :input_id", \
                         input_id = self.get_id())
         name = cursor.fetchone()[0]
-        database.close(db)
+        database.disconnect(db)
         return name
 
     def get_middle_initial(self):
@@ -141,7 +143,7 @@ class Person():
                         from persons where persons.id = :input_id", \
                         input_id = self.get_id())
         middle_initial = cursor.fetchone()
-        database.close(db)
+        database.disconnect(db)
         if middle_initial:
             return middle_initial[0]
         else:
@@ -154,7 +156,7 @@ class Person():
                         from persons where persons.id = :input_id", \
                         input_id = self.get_id())
         name = cursor.fetchone()[0]
-        database.close(db)
+        database.disconnect(db)
         return name
 
     def get_salary(self):
@@ -164,7 +166,7 @@ class Person():
                         from persons where persons.id = :input_id", \
                         input_id = self.get_id())
         salary = cursor.fetchone()
-        database.close(db)
+        database.disconnect(db)
         if salary:
             return salary[0]
         else:
@@ -177,7 +179,7 @@ class Person():
                         from persons where persons.id = :input_id", \
                         input_id = self.get_id())
         title = cursor.fetchone()
-        database.close(db)
+        database.disconnect(db)
         if title:
             return title[0]
         else:
@@ -196,7 +198,7 @@ class Person():
         if orders:
             for order_id in orders:
                 order_list.append(order.Order(order_id))
-        database.close(db)
+        database.disconnect(db)
         return order_list
         
     def get_cart(self):
@@ -227,11 +229,11 @@ class Person():
 
         if addresses:
             for address_id in addresses:
-                address_list.append(address.Address(addres_id)
+                address_list.append(address.Address(addres_id))
         else:
             address_list = []
 
-        database.close(db)
+        database.disconnect(db)
         return address_list
 
     def get_default_address(self, type_string):
@@ -254,7 +256,7 @@ class Person():
 
         address_id = cursor.fetchone()
 
-        database.close(db)
+        database.disconnect(db)
 
         if address_id:
             address_reference = address.Address(address_id[0])
@@ -272,7 +274,7 @@ class Person():
                         where id = :input_id",  \
                         input_name = str(new_first_name), input_id = self.get_id())
         database.commit(db)
-        database.close(db)
+        database.disconnect(db)
 
     def modify_middle_initial(self, new_middle_initial):
         db = database.connect()
@@ -282,7 +284,7 @@ class Person():
                         where id = :input_id",  \
                         input_name = str(new_middle_initial), input_id = self.get_id())
         database.commit(db)
-        database.close(db)
+        database.disconnect(db)
 
     def modify_last_name(self, new_last_name):
         db = database.connect()
@@ -292,7 +294,7 @@ class Person():
                         where id = :input_id",  \
                         input_name = str(new_last_name), input_id = self.get_id())
         database.commit(db)
-        database.close(db)
+        database.disconnect(db)
 
     def modify_password(self, new_password):
         db = database.connect()
@@ -303,7 +305,7 @@ class Person():
                         where id = :input_id",  \
                         input_pw = hashed_password, input_id = self.get_id())
         database.commit(db)
-        database.close(db)
+        database.disconnect(db)
     
     def modify_salary(self, new_salary):
         db = database.connect()
@@ -319,7 +321,7 @@ class Person():
                         where id = :input_id",  \
                         salary = new_salary, input_id = self.get_id())
         database.commit(db)
-        database.close(db)
+        database.disconnect(db)
     
     def modify_job_title(self, new_title):
         db = database.connect()
@@ -329,7 +331,7 @@ class Person():
                         where id = :input_id",  \
                         input_name = str(new_title), input_id = self.get_id())
         database.commit(db)
-        database.close(db)
+        database.disconnect(db)
 
     def check_password(self, password):
         # give password on person instance, get T/F response
@@ -340,14 +342,14 @@ class Person():
                         input_id = self.get_id())
         
         hashed_password = cursor.fetchone()
-        database.close(db)
+        database.disconnect(db)
         
         if hashed_password:
             hashed_password = hashed_password[0]
         else:
             raise ValueError("This person reference did not map to the table for some reason")
 
-        if hashed_password = hash_password(self.get_username(), password):
+        if hashed_password == hash_password(self.get_username(), password):
             # input password is valid
             return True
         else:
@@ -364,7 +366,7 @@ class Person():
                         where username = :input_username and password = :input_pw", \
                         input_username = username, input_pw = hashed_password)
         person_id = cursor.fetchone()
-        database.close(db)
+        database.disconnect(db)
         if person_id:
             # Credentials had a match
             person_reference = Person(person_id[0])
@@ -377,4 +379,4 @@ class Person():
     # Helper Methods
 
     def hash_password(username, password):
-        return (hashlib.md5(username.encode('utf-8') + password.encode('utf-8').hexdigest())
+        return (hashlib.md5(username.encode('utf-8') + password.encode('utf-8').hexdigest()))

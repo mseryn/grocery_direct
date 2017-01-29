@@ -50,7 +50,7 @@ class Order():
         else:
             print("Given ID not an int, id: %s" %str(given_id))
 
-        database.close(db)
+        database.disconnect(db)
 
     @staticmethod
     def new_order(customer):
@@ -73,7 +73,7 @@ class Order():
             database.commit(db)
         
         returned_id = returned_id.getvalue()
-        database.close(db)
+        database.disconnect(db)
         return Order(returned_id)
 
     # Get Methods
@@ -96,7 +96,7 @@ class Order():
             for product_id in returned_products:
                 product_list.append(product.Product(product_id))
 
-        database.close(db)
+        database.disconnect(db)
         return product_list
 
     def get_product_quantity(self, product):
@@ -111,10 +111,10 @@ class Order():
                 cursor.execute("select quantity from order_to_product \
                                 where order_id = :input_id and product_id = :input_pid", \
                                 input_id = self.get_id(), input_pid = product.get_id())
-                database.close(db)
+                database.disconnect(db)
                 return cursor.fetchone()[0]
             else:
-                database.close(db)
+                database.disconnect(db)
                 return 0
 
     def get_total_cost(self):
@@ -134,7 +134,7 @@ class Order():
                         from order_statuses join orders on order_statuses.id = orders.status_id \
                         where orders.id = :input_id", input_id = self.get_id())
         status_tuple = cursor.fetchone()
-        database.close(db)
+        database.disconnect(db)
         if status_tuple:
             return status_tuple[0]
         else:
@@ -147,7 +147,7 @@ class Order():
         cursor.execute("select person_id from orders where id = :input_id", \
                         input_id = self.get_id())
         customer_id_tuple = cursor.fetchone()
-        database.close(db)
+        database.disconnect(db)
         if customer_id_tuple:
             return customer.Customer(customer_id_tuple()[0])
         else:
@@ -160,7 +160,7 @@ class Order():
         cursor.execute("select shipping_addr_id from orders where id = :input_id", \
                         input_id = self.get_id())
         shipping_id_tuple = cursor.fetchone()
-        database.close(db)
+        database.disconnect(db)
         if shipping_id_tuple:
             return address.Address(shipping_id_tuple[0])
         else:
@@ -173,7 +173,7 @@ class Order():
         cursor.execute("select billing_addr_id from orders where id = :input_id", \
                         input_id = self.get_id())
         billing_id_tuple = cursor.fetchone()
-        database.close(db)
+        database.disconnect(db)
         if billing_id_tuple:
             return address.Address(billing_id_tuple[0])
         else:
@@ -192,7 +192,7 @@ class Order():
         submission_date_tuple = cursor.fetchone()
         if submission_date_tuple:
             submission_date = submission_date_tuple[0].getvalue()
-        database.close(db)
+        database.disconnect(db)
         return submission_date
 
     # Modify Methods
@@ -213,7 +213,7 @@ class Order():
             database.commit(db)
         else:
             print("Status is not valid order status string. \nString given: %s" %(new_status))
-        database.close(db)
+        database.disconnect(db)
 
     def modify_shipping_address(self, new_address):
         db = database.connect()
@@ -226,7 +226,7 @@ class Order():
             database.commit(db)
         else:
             print("Requires valid address to set shipping address")
-        database.close(db)
+        database.disconnect(db)
 
     def modify_billing_address(self, new_address):
         db = database.connect()
@@ -239,7 +239,7 @@ class Order():
             database.commit(db)
         else:
             print("Requires valid address to set billing address")
-        database.close(db)
+        database.disconnect(db)
 
     def add_product(self, new_product):
         db = database.connect()
@@ -262,7 +262,7 @@ class Order():
                 database.commit(db)
         else:
             print("new product must be a product instance")
-        database.close(db)
+        database.disconnect(db)
 
     def remove_product(self, product):
         db = database.connect()
@@ -287,7 +287,7 @@ class Order():
                 print("Product does not exist in order, doing nothing")
         else:
             print("product must be a product instance")
-        database.close(db)
+        database.disconnect(db)
 
     def modify_product_quantity(self, product, new_quantity):
         db = database.connect()
@@ -323,7 +323,7 @@ class Order():
                 print("product to change quantity must be valid product in products table")
         else:
             print("specified quantity must be int >= 0 \nquantity given: %i" %(new_quantity))
-        database.close(db)
+        database.disconnect(db)
 
     def set_submission_date(self):
         # Sets submission date to now
@@ -332,4 +332,4 @@ class Order():
         cursor.execute("update orders set submission_date = :input_date where id = :input_id", \
                         input_date = datetime.datetime.now(), input_id = self.get_id())
         database.commit(db)
-        database.close(db)
+        database.disconnect(db)
