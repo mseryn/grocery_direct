@@ -57,7 +57,7 @@ class Order():
         db = database.connect()
         cursor = database.get_cursor(db)
 
-        returned_id = returned_id = cursor.var(cx_Oracle.NUMBER)
+        returned_id = returned_id = cursor.var(database.cx_Oracle.NUMBER)
         initial_status = "pending"
 
         status_id = cursor.fetchone()
@@ -72,6 +72,7 @@ class Order():
                             output_id = returned_id)
             database.commit(db)
         
+        returned_id = returned_id.getvalue()
         database.close(db)
         return Order(returned_id)
 

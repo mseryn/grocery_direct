@@ -50,7 +50,7 @@ class Warehouse():
         address_id = warehouse_address.get_id()
 
         if isinstance(capacity, (int, float)):
-            returned_id = cursor.var(cx_Oracle.NUMBER)
+            returned_id = cursor.var(database.cx_Oracle.NUMBER)
             capacity = int(capacity)
             cursor.execute("insert into warehouses \
                             (capacity, address_id) values (:input_capacity, :input_address) \

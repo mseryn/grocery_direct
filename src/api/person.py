@@ -68,7 +68,7 @@ class Person():
         db = database.connect()
         cursor = database.get_cursor(db)
 
-        returned_id = returned_id = cursor.var(cx_Oracle.NUMBER)
+        returned_id = returned_id = cursor.var(database.cx_Oracle.NUMBER)
 
         # getting person type ID from type_string
         cursor.execute("select id from person_types where person_type = :input_type", \
@@ -104,6 +104,7 @@ class Person():
                             output_id = returned_id)
             database.commit(db)
                             
+        returned_id = returned_id.getvalue()
         database.close(db)
         return Person(returned_id)
 

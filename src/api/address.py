@@ -140,6 +140,7 @@ class Address():
                                 output_id = returned_id)
                 database.commit(db)
 
+        returned_id = returned_id.getvalue()
         database.close()
         return Address(returned_id)
 
