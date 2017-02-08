@@ -47,7 +47,7 @@ class Address():
                 print("Given ID not in addresses table, id: %i" %given_id)
         else:
             print("Given ID not an int, id: %s" %str(given_id))
-        database.disconnect()
+        database.disconnect(db)
             
     @staticmethod
     def new_address(street, city, state_code, zip_code, type_string, input_person = None, \
@@ -100,50 +100,50 @@ class Address():
             if person_id:
                 cursor.execute("insert into addresses \
                                 (street, apartment_no, city, zip_code, state_code_id, \
-                                address_type_id, person_id) \
+                                address_type_id, person_id, default_flag) \
                                 values (:input_street, :input_apt_no, :input_city, :input_zip, \
-                                :input_state, :input_type, :input_person) \
+                                :input_state, :input_type, :input_person, :input_flag) \
                                 returning id into :output_id", \
                                 input_street = street, input_apt_no = apt_no, input_city = city, \
                                 input_zip = zip_code, input_state = state_id, input_type = type_id, \
-                                input_person = person_id, output_id = returned_id)
+                                input_person = person_id, input_flag = 0, output_id = returned_id)
                 database.commit(db)
             elif not person_id:
                 cursor.execute("insert into addresses \
                                 (street, apartment_no, city, zip_code, state_code_id, \
-                                address_type_id) \
+                                address_type_id, default_flag) \
                                 values (:input_street, :input_apt_no, :input_city, :input_zip, \
-                                :input_state, :input_type) \
+                                :input_state, :input_type, :input_flag) \
                                 returning id into :output_id", \
                                 input_street = street, input_apt_no = apt_no, input_city = city, \
                                 input_zip = zip_code, input_state = state_id, input_type = type_id, \
-                                output_id = returned_id)
+                                input_flag = 0, output_id = returned_id)
                 database.commit(db)
         elif not apt_no:
             if person_id:
                 cursor.execute("insert into addresses \
                                 (street, city, zip_code, state_code_id, \
-                                address_type_id, person_id) \
+                                address_type_id, person_id, default_flag) \
                                 values (:input_street, :input_city, :input_zip, \
-                                :input_state, :input_type, :input_person) \
+                                :input_state, :input_type, :input_person, :input_flag) \
                                 returning id into :output_id", \
                                 input_street = street, input_city = city, \
                                 input_zip = zip_code, input_state = state_id, input_type = type_id, \
-                                input_person = person_id, output_id = returned_id)
+                                input_person = person_id, input_flag = 0, output_id = returned_id)
                 database.commit(db)
             elif not person_id:
                 cursor.execute("insert into addresses \
                                 (street, city, zip_code, state_code_id, \
-                                address_type_id) \
+                                address_type_id, default_flag) \
                                 values (:input_street, :input_city, :input_zip, \
-                                :input_state, :input_type) \
+                                :input_state, :input_type, :input_flag) \
                                 returning id into :output_id", \
                                 input_street = street, input_city = city, \
                                 input_zip = zip_code, input_state = state_id, input_type = type_id, \
-                                output_id = returned_id)
+                                input_flag = 0, output_id = returned_id)
                 database.commit(db)
 
-        returned_id = returned_id.getvalue()
+        returned_id = int(returned_id.getvalue())
         database.disconnect(db)
         return Address(returned_id)
 
@@ -206,7 +206,7 @@ class Address():
                         address_id = self.get_id())
         city = cursor.fetchone()[0]
         database.disconnect(db)
-        return street
+        return city
     
     def get_zip_code(self):
         db = database.connect()
@@ -225,8 +225,9 @@ class Address():
                         from state_codes join addresses on state_codes.id = addresses.state_code_id \
                         where addresses.id = :address_id", \
                         address_id = self.get_id())
+        state_string = cursor.fetchone()[0]
         database.disconnect(db)
-        return cursor.fetchone()[0]
+        return state_string
 
     def get_type(self):
         db = database.connect()
@@ -241,8 +242,55 @@ class Address():
         database.disconnect(db)
         return type_string
 
+    def get_default_flag(self):
+        db = database.connect()
+        cursor = database.get_cursor(db)
+        # Returns True/False based on 1/0 value in table
+        cursor.execute("select default_flag from addresses \
+                        where id = :input_id", \
+                        input_id = self.get_id())
+        flag = cursor.fetchone()[0]
+        database.disconnect(db)
+        if flag == 0:
+            return False
+        elif flag == 1:
+            return True
+        else:
+            raise ValueError("This should have returned 1 or 0, major error, should never happen" \
+                + "\nValue returned: %s" %str(flag))
+
 
     # Modification Methods
+
+    def add_person(self, new_person):
+        db = database.connect()
+        cursor = database.get_cursor(db)
+        cursor.execute("select id from persons where id = :input_id", \
+                        input_id = new_person.get_id())
+        if cursor.fetchone():
+            # The person exists
+            cursor.execute("update addresses set person_id = :input_p_id \
+                            where id = :input_id", \
+                            input_p_id = new_person.get_id(), input_id = self.get_id())
+            database.commit(db)
+        else:
+            raise ValueError("Person does not exist")
+        database.disconnect(db)
+
+    def set_default_flag(self, state):
+        if state != True and state != False:
+            raise ValueError("Requires True or False")
+        if state == True:
+            flag = 1
+        elif state == False:
+            flag = 0
+        db = database.connect()
+        cursor = database.get_cursor(db)
+        cursor.execute("update addresses set default_flag = :input_flag \
+                        where id = :input_id", \
+                        input_flag = flag, input_id = self.get_id())
+        database.commit(db)
+        database.disconnect(db)
 
     def modify_street(self, new_street):
         db = database.connect()

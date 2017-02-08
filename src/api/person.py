@@ -52,14 +52,17 @@ class Person():
 
         if isinstance(given_id, int):
             # Ensuring warehouse ID is in warehouses table
-            cursor.execute("select id from orders where id = :order_id", order_id = given_id)
+            cursor.execute("select id from persons where id = :person_id", person_id = given_id)
             if cursor.fetchone():
                 self._id = given_id
 
             else:
-                print("Given ID not in orders table, id: %i" %given_id)
+                raise ValueError("Given ID not in persons table, id: %i" %given_id)
+                self._id = None
         else:
-            print("Given ID not an int, id: %s" %str(given_id))
+            if given_id != None:
+                raise ValueError("Given ID not an int, id: %s" %str(given_id))
+            self._id = None
 
         database.disconnect(db)
 
@@ -113,7 +116,10 @@ class Person():
     # Get Methods
 
     def get_id(self):
-        return self._id
+        if self._id:
+            return self._id
+        else:
+            return None
 
     def get_type(self):
         db = database.connect()
@@ -356,27 +362,28 @@ class Person():
             # input password is invalid
             return False
     
-    @staticmethod
-    def check_credentials(username, password):
-        # Credential check -- give user/password, return user instance or None
-        db = database.connect()
-        cursor = database.get_cursor(db)
-        hashed_password = hash_password(username, password)
-        cursor.execute("select id from persons \
-                        where username = :input_username and password = :input_pw", \
-                        input_username = username, input_pw = hashed_password)
-        person_id = cursor.fetchone()
-        database.disconnect(db)
-        if person_id:
-            # Credentials had a match
-            person_reference = Person(person_id[0])
-        else:
-            # Credentials didn't match
-            person_reference = None
 
-        return person_reference
+# Helper Methods
 
-    # Helper Methods
 
-    def hash_password(username, password):
-        return (hashlib.md5(username.encode('utf-8') + password.encode('utf-8').hexdigest()))
+def check_credentials(username, password):
+    # Credential check -- give user/password, return user instance or None
+    db = database.connect()
+    cursor = database.get_cursor(db)
+    hashed_password = hash_password(username, password)
+    cursor.execute("select id from persons \
+                    where username = :input_username and password = :input_pw", \
+                    input_username = username, input_pw = hashed_password)
+    person_id = cursor.fetchone()
+    database.disconnect(db)
+    if person_id:
+        # Credentials had a match
+        person_reference = Person(person_id[0])
+    else:
+        # Credentials didn't match
+        person_reference = None
+
+    return person_reference
+
+def hash_password(username, password):
+    return (hashlib.md5(username.encode('utf-8') + password.encode('utf-8')).hexdigest())

@@ -51,12 +51,11 @@ def test_address_get_null_person():
         null for default for address"
 
 def test_address_add_person():
-    test_person = person.Person.new_person("testuser", "testpassword", "Test", "Person", \
-       "customer")
     test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
-    test_address.add_person(test_person)
-    assert(test_address.get_person().get_id() == test_person.get_id()), "get and add person did \
+    TEST_PERSON = person.Person(1)
+    test_address.add_person(TEST_PERSON)
+    assert(test_address.get_person().get_id() == TEST_PERSON.get_id()), "get and add person did \
         not correctly function for address"
 
 #**************************************************************************************************
