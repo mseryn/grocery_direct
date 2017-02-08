@@ -57,24 +57,32 @@ def test_warehouse_modify_capacity():
         "modify_capacity() failed to modify and return capacity for warehouse"
 
 def test_warehouse_modify_capacity_invalid_type():
+    exception_found = False
     new_capacity = "invalid capacity"
     test_warehouse = warehouse.Warehouse.new_warehouse(150, STREET, CITY, STATE, ZIP_CODE)
-    test_warehouse.modify_capacity(new_capacity)
-    assert(test_warehouse.get_capacity() == 150), \
+    try:
+        test_warehouse.modify_capacity(new_capacity)
+    except:
+        exception_found = True
+    assert(exception_found), \
         "modify_capacity() failed handling attempt to modifiy capacity to string for warehouse"
 
 def test_warehouse_modify_capacity_non_int():
     new_capacity = 400.5
     test_warehouse = warehouse.Warehouse.new_warehouse(150, STREET, CITY, STATE, ZIP_CODE)
     test_warehouse.modify_capacity(new_capacity)
-    assert(test_warehouse.get_capacity() == 400), \
+    assert(test_warehouse.get_capacity() == int(new_capacity)), \
         "modify_capacity() failed handling attempt to modifiy capacity to float for warehouse"
 
 def test_warehouse_modify_capacity_invalid_amount():
+    exception_found = False
     new_capacity = -15
     test_warehouse = warehouse.Warehouse.new_warehouse(150, STREET, CITY, STATE, ZIP_CODE)
-    test_warehouse.modify_capacity(new_capacity)
-    assert(test_warehouse.get_capacity() == 150), \
+    try:
+        test_warehouse.modify_capacity(new_capacity)
+    except:
+        exception_found = True
+    assert(exception_found), \
         "modify_capacity() failed handle attempt to modify capacity to negative number for warehouse"
 
 
@@ -172,10 +180,14 @@ def test_warehouse_modify_state_verify_product_prices():
 # Attempting to change capacity to value less than remaining capacity
 
 def test_warehouse_modify_capacity_invalid():
+    exception_thrown = False
     test_warehouse = warehouse.Warehouse.new_warehouse(150, STREET, CITY, STATE, ZIP_CODE)
     test_product = product.Product.new_product("test product", "non-food", size = 120)
     test_warehouse.add_product(test_product)
-    test_warehouse.modify_capacity(100)
-    assert(test_warehouse.get_capacity() == 150), \
+    try:
+        test_warehouse.modify_capacity(100)
+    except:
+        exception_thrown = True
+    assert(exception_thrown and test_warehouse.get_capacity() == 150), \
         "get_capacity() did not correctly behave when attempt was made to change capacity to value \
          less than remaining capacity"

@@ -35,9 +35,9 @@ class Warehouse():
             if cursor.fetchone():
                 self._id = given_id
             else:
-                print("Given ID not in warehouses table, id: %i" %given_id)
+                raise ValueError("Given ID not in warehouses table, id: %i" %given_id)
         else:
-            print("Given ID not an int, id: %s" %str(given_id))
+            raise ValueError("Given ID not an int, id: %s" %str(given_id))
         database.disconnect(db)
 
     @staticmethod
@@ -74,8 +74,9 @@ class Warehouse():
         cursor = database.get_cursor(db)
         cursor.execute("select capacity from warehouses where id = :warehouse_id", \
                         warehouse_id = self.get_id())
+        cap = cursor.fetchone()[0]
         database.disconnect(db)
-        return cursor.fetchone()[0]
+        return cap
 
     def get_stock(self):
         db = database.connect()
@@ -113,8 +114,9 @@ class Warehouse():
         total_used_space = 0
         for product in self.get_stock():
             total_used_space += product.get_size() * self.get_product_quantity(product)
+        remaining_cap = self.get_capacity() - total_used_space
         database.disconnect(db)
-        return self.get_capacity() - total_used_space
+        return remaining_cap
 
     def get_address(self):
         db = database.connect()
@@ -144,16 +146,13 @@ class Warehouse():
                                     where id = :warehouse_id", input_capacity = int(new_capacity), \
                                     warehouse_id = self.get_id())
                     database.commit(db)
-                    database.disconnect(db)
                 else:
-                    database.disconnect(db)
-                    print("New capacity must be >= remaining capacity")
+                    raise ValueError("New capacity must be >= remaining capacity")
             else:
-                database.disconnect(db)
-                print("Capacity must be >=0")
+                raise ValueError("Capacity must be >=0")
         else:
-            database.disconnect(db)
-            print("New capacity must be integer \nInput capacity: %s" %(str(new_capacity)))
+            raise ValueError("New capacity must be integer \nInput capacity: %s" %(str(new_capacity)))
+        database.disconnect(db)
 
     def add_product(self, new_product):
         db = database.connect()
@@ -240,5 +239,5 @@ class Warehouse():
                                     input_wid = self.get_id())
                     database.commit(db)
         else:
-            print("new quantity must be positive integer value")
+            raise ValueError("new quantity must be positive integer value")
         database.disconnect(db)
