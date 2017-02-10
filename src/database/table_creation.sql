@@ -75,13 +75,13 @@ create table card_types
 create table persons 
 (
     id              integer generated always as identity primary key,
-    username        varchar(20) not null unique,
-    password        varchar(20) not null,
-    first_name      varchar(20) not null,
+    username        varchar(200) not null unique,
+    password        varchar(200) not null,
+    first_name      varchar(200) not null,
     middle_initial  char(1),
-    last_name       varchar(20) not null,
+    last_name       varchar(200) not null,
     salary          numeric(8, 2),
-    job_title       varchar(20),
+    job_title       varchar(200),
     balance         numeric(8, 2),
     person_type_id  integer,
     constraint      person_type_fk foreign key (person_type_id) references person_types(id)
@@ -99,7 +99,6 @@ create table addresses
     person_id       integer,
     default_flag    integer default null,
     constraint      default_flag_vals   check ((default_flag = null) or (default_flag = 1)),
-    constraint      uniqueness_of_flag  unique (person_id, default_flag, address_type_id),
     constraint      person_fk_for_addr  foreign key (person_id) references persons(id),
     constraint      state_code_fk       foreign key (state_code_id) references state_codes(id),
     constraint      address_type_fk     foreign key (address_type_id)  references address_types(id)

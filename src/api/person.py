@@ -50,7 +50,7 @@ class Person():
         db = database.connect()
         cursor = database.get_cursor(db)
 
-        if isinstance(given_id, int):
+        if isinstance(given_id, (int, float)):
             # Ensuring warehouse ID is in warehouses table
             cursor.execute("select id from persons where id = :person_id", person_id = given_id)
             if cursor.fetchone():
@@ -67,7 +67,8 @@ class Person():
         database.disconnect(db)
 
     @staticmethod
-    def new_person(username, password, first_name, last_name, type_string, middle_initial = None):
+    def new_person(username, password, first_name, last_name, type_string, middle_initial = None, \
+        salary = None, job_title = None):
         db = database.connect()
         cursor = database.get_cursor(db)
 
@@ -85,6 +86,9 @@ class Person():
         hashed_password = hash_password(username, password)
             
         if middle_initial:
+            # Trimming middle initial
+            middle_initial = middle_initial[0]
+
             cursor.execute("insert into persons \
                             (username, password, first_name, middle_initial, last_name, \
                             person_type_id) \
@@ -92,7 +96,7 @@ class Person():
                             :input_first, :input_middle, :input_last, :input_type_id) \
                             returning id into :output_id", \
                             input_username = username, input_password = hashed_password, \
-                            input_first = first_name, input_middle = middle_name, \
+                            input_first = first_name, input_middle = middle_initial, \
                             input_last = last_name, input_type_id = type_id, \
                             output_id = returned_id)
             database.commit(db)
@@ -111,7 +115,12 @@ class Person():
                             
         returned_id = returned_id.getvalue()
         database.disconnect(db)
-        return Person(returned_id)
+        reference = Person(returned_id)
+        if salary:
+            reference.modify_salary(salary)
+        if job_title:
+            reference.modify_job_title(job_title)
+        return reference
 
     # Get Methods
 
@@ -120,6 +129,15 @@ class Person():
             return self._id
         else:
             return None
+
+    def get_username(self):
+        db = database.connect()
+        cursor = database.get_cursor(db)
+        cursor.execute("select username from persons where id = :input_id", \
+                        input_id = self.get_id())
+        user = cursor.fetchone()[0]
+        database.disconnect(db)
+        return user
 
     def get_type(self):
         db = database.connect()
@@ -218,7 +236,7 @@ class Person():
         cart = self.get_cart()
         if cart:
             return cart.get_total_cost()
-        return None
+        return 0
 
     # Addresses:
 
@@ -275,42 +293,50 @@ class Person():
     def modify_first_name(self, new_first_name):
         db = database.connect()
         cursor = database.get_cursor(db)
-        cursor.execute("update persons \
-                        set first_name = :input_name \
-                        where id = :input_id",  \
-                        input_name = str(new_first_name), input_id = self.get_id())
-        database.commit(db)
+        if new_first_name:
+            cursor.execute("update persons \
+                            set first_name = :input_name \
+                            where id = :input_id",  \
+                            input_name = str(new_first_name), input_id = self.get_id())
+            database.commit(db)
         database.disconnect(db)
 
     def modify_middle_initial(self, new_middle_initial):
         db = database.connect()
         cursor = database.get_cursor(db)
-        cursor.execute("update persons \
-                        set middle_initial = :input_name \
-                        where id = :input_id",  \
-                        input_name = str(new_middle_initial), input_id = self.get_id())
+        if new_middle_initial:
+            cursor.execute("update persons \
+                            set middle_initial = :input_name \
+                            where id = :input_id",  \
+                            input_name = str(new_middle_initial)[0], input_id = self.get_id())
+        else:
+            cursor.execute("update persons \
+                            set middle_initial = NULL where id = :input_id",  \
+                            input_id = self.get_id())
         database.commit(db)
         database.disconnect(db)
 
     def modify_last_name(self, new_last_name):
         db = database.connect()
         cursor = database.get_cursor(db)
-        cursor.execute("update persons \
-                        set last_name = :input_name \
-                        where id = :input_id",  \
-                        input_name = str(new_last_name), input_id = self.get_id())
-        database.commit(db)
+        if new_last_name:
+            cursor.execute("update persons \
+                            set last_name = :input_name \
+                            where id = :input_id",  \
+                            input_name = str(new_last_name), input_id = self.get_id())
+            database.commit(db)
         database.disconnect(db)
 
     def modify_password(self, new_password):
         db = database.connect()
         cursor = database.get_cursor(db)
-        hashed_password = hash_password(self.get_username(), new_password)
-        cursor.execute("update persons \
-                        set password = :input_pw \
-                        where id = :input_id",  \
-                        input_pw = hashed_password, input_id = self.get_id())
-        database.commit(db)
+        if new_password:
+            hashed_password = hash_password(self.get_username(), new_password)
+            cursor.execute("update persons \
+                            set password = :input_pw \
+                            where id = :input_id",  \
+                            input_pw = hashed_password, input_id = self.get_id())
+            database.commit(db)
         database.disconnect(db)
     
     def modify_salary(self, new_salary):
@@ -325,7 +351,7 @@ class Person():
         cursor.execute("update persons \
                         set salary = :input_salary \
                         where id = :input_id",  \
-                        salary = new_salary, input_id = self.get_id())
+                        input_salary = new_salary, input_id = self.get_id())
         database.commit(db)
         database.disconnect(db)
     
@@ -335,7 +361,7 @@ class Person():
         cursor.execute("update persons \
                         set job_title = :input_title \
                         where id = :input_id",  \
-                        input_name = str(new_title), input_id = self.get_id())
+                        input_title = str(new_title), input_id = self.get_id())
         database.commit(db)
         database.disconnect(db)
 
@@ -344,7 +370,7 @@ class Person():
         db = database.connect()
         cursor = database.get_cursor(db)
         
-        cursor.execute("select password from persons where id = :inpit_id", \
+        cursor.execute("select password from persons where id = :input_id", \
                         input_id = self.get_id())
         
         hashed_password = cursor.fetchone()

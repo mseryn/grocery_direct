@@ -65,7 +65,7 @@ BILL_TYPE_STRING    = "billing"
 # Default strings for test person
 FNAME       = "FirstName"
 LNAME       = "LastName"
-MIDDLE_INIT = "MI"
+MIDDLE_INIT = "M"
 USERNAME    = "testaccount"
 PASSWORD    = "testpassword"
 
@@ -75,57 +75,55 @@ JOB_TITLE   = "sales engineer"
 
 # Test objects (avoid cluttering db)
 SHIP_ADDRESS = address.Address.new_address(SHIP_STREET, SHIP_CITY, SHIP_STATE_CODE, \
-                SHIP_ZIP_CODE, SHIP_TYPE_STRING)
+                    SHIP_ZIP_CODE, SHIP_TYPE_STRING)
 BILL_ADDRESS = address.Address.new_address(BILL_STREET, BILL_CITY, BILL_STATE_CODE, \
-                BILL_ZIP_CODE, BILL_TYPE_STRING)
-TEST_PERSON  = person.Person.new_person(USERNAME, PASSWORD, FNAME, LNAME, "customer", \
-                    middle_initial = MIDDLE_INIT)
-TEST_STAFF   = person.Person.new_person("teststaff", PASSWORD, FNAME, LNAME, "staff", \
-                    salary = SALARY, job_title = JOB_TITLE)
+                    BILL_ZIP_CODE, BILL_TYPE_STRING)
+
+
+# Ensuring test person doesn't exist before creating
+TEST_PERSON = person.check_credentials(USERNAME, PASSWORD)
+TEST_STAFF = person.check_credentials(STAFF_USER, PASSWORD)
+SECOND_TEST_PERSON = person.check_credentials("second test person", PASSWORD)
+
+if not TEST_PERSON:
+    TEST_PERSON  = person.Person.new_person(USERNAME, PASSWORD, FNAME, LNAME, "customer", \
+                        middle_initial = MIDDLE_INIT)
+if not TEST_STAFF:
+    TEST_STAFF   = person.Person.new_person(STAFF_USER, PASSWORD, FNAME, LNAME, "staff", \
+                        salary = SALARY, job_title = JOB_TITLE)
+if not SECOND_TEST_PERSON:
+    SECOND_TEST_PERSON = person.Person.new_person("second test person", PASSWORD, FNAME, LNAME, \
+                        "customer", middle_initial = MIDDLE_INIT)
 
 #**************************************************************************************************
 #**  USERNAME/PASSWORD
 #**************************************************************************************************
 
-def person_check_user_pw():
-    assert(test_person.test_credentials(USERNAME, PASSWORD).get_id() == test_person.get_id()), \
+def test_person_check_user_pw():
+    assert(person.check_credentials(USERNAME, PASSWORD).get_id() == TEST_PERSON.get_id()), \
         "test_credentials() did not correctly return True given valid inputs for person"
 
-def person_get_username():
-    assert(test_person.get_username() == USERNAME), \
+def test_person_get_username():
+    assert(TEST_PERSON.get_username() == USERNAME), \
         "get_username() did not return username for person"
 
-def person_check_password():
-    assert(test_person.check_password(PASSWORD) == True), \
+def test_person_check_password():
+    assert(TEST_PERSON.check_password(PASSWORD) == True), \
         "check_password() did not return True when given correct password for person"
 
-def person_check_password_invalid():
-    assert(test_person.check_password("not valid password") == False), \
+def test_person_check_password_invalid():
+    assert(TEST_PERSON.check_password("not valid password") == False), \
         "check_password() did not return False when given incorrect password for person"
-
-# Manipulating username
-
-def person_modify_username():
-    # successfully modify own username with unique new username
-    test_person.modify_username("new user")
-    assert(test_person.get_username() == "new user"), \
-        "modify and get username did not modify and retrieve username for person"
-
-def person_modify_username_with_nonunique_new_username():
-    # unsuccessfully modify own username with non-unique new username
-    new_test_person = person.Person.new_person("second test person", PASSWORD, FNAME, LNAME, \
-        middle_initial = MIDDLE_INIT)
-    new_test_person.modify_username(USERNAME)
-    assert(test_person.get_username() == "second test person"), \
-        "modify_username allowed username to be set to non-unique value for person"
 
 # Manipulating password
 
-def person_modify_password():
+def test_person_modify_password():
     # successfully modify own password
     new_pw = "new password"
-    new_test_person.modify_password(new_pw)
-    assert(test_person.check_credentials("second test person", new_pw) == True), \
+    SECOND_TEST_PERSON.modify_password(new_pw)
+    checked_person = person.check_credentials("second test person", new_pw)
+    SECOND_TEST_PERSON.modify_password(PASSWORD)
+    assert(checked_person.get_id() == SECOND_TEST_PERSON.get_id()), \
         "modify_password failed to modify password field and return True for credential check \
         for person"
 
@@ -133,55 +131,55 @@ def person_modify_password():
 # NAME
 #**************************************************************************************************
 
-def person_get_first_name():
-    assert(test_person.get_first_name() == FNAME), \
+def test_person_get_first_name():
+    assert(TEST_PERSON.get_first_name() == FNAME), \
         "get_first_name failed to return first name for person"
 
-def person_get_middle_initial():
-    assert(test_person.get_middle_initial() == MIDDLE_INIT), \
+def test_person_get_middle_initial():
+    assert(TEST_PERSON.get_middle_initial() == MIDDLE_INIT), \
         "get_middle_initial failed to return middle initial for person"
 
-def person_get_last_name():
-    assert(test_person.get_last_name() == LNAME), \
+def test_person_get_last_name():
+    assert(TEST_PERSON.get_last_name() == LNAME), \
         "get_last_name failed to return last name for person"
 
-def person_modify_first_name():
+def test_person_modify_first_name():
     new_fname = "new first name"
-    second_test_person.modify_first_name(new_fname)
-    assert(second_test_person.get_first_name() == new_fname), \
+    SECOND_TEST_PERSON.modify_first_name(new_fname)
+    assert(SECOND_TEST_PERSON.get_first_name() == new_fname), \
         "modify_first_name failed to modify first name for person"
 
-def person_modify_first_name_null():
+def test_person_modify_first_name_null():
     # unsuccessfully modify first name with null value
-    test_person.modify_first_name(None)
-    assert(test_person.get_first_name() == FNAME), \
+    TEST_PERSON.modify_first_name(None)
+    assert(TEST_PERSON.get_first_name() == FNAME), \
         "modify_first_name failed to handle None entry for first name for person"
 
-def person_modify_last_name():
+def test_person_modify_last_name():
     # successfully modify last name
-    new_lanme = "new last name"
-    second_test_person.modify_last_name(new_lname)
-    assert(second_test_person.get_last_name() == new_lname), \
+    new_lname = "new last name"
+    SECOND_TEST_PERSON.modify_last_name(new_lname)
+    assert(SECOND_TEST_PERSON.get_last_name() == new_lname), \
         "modify_last_name failed to modify last name for person"
 
-def person_modify_last_name_null():
+def test_person_modify_last_name_null():
     # unsuccessfully modify last name with null value
-    test_person.modify_last_name(None)
-    assert(test_person.get_last_name() == LNAME), \
+    TEST_PERSON.modify_last_name(None)
+    assert(TEST_PERSON.get_last_name() == LNAME), \
         "modify_last_name failed to handle None enyry for last name for person"
 
-def person_modify_middle_initial():
+def test_person_modify_middle_initial():
     # successfully modify middle initial
-    new_mi = "NI"
-    second_test_person.modify_middle_initial(new_mi)
-    assert(second_test_person.get_middle_initial() == new_mi), \
+    new_mi = "N"
+    SECOND_TEST_PERSON.modify_middle_initial(new_mi)
+    assert(SECOND_TEST_PERSON.get_middle_initial() == new_mi), \
         "modify_middle_initial failed to modify middle initial for person"
 
-def person_modify_middle_initial_null():
+def test_person_modify_middle_initial_null():
     # successfully modify middle initial with null value
     new_mi = None
-    second_test_person.modify_middle_initial(new_mi)
-    assert(second_test_person.get_middle_initial() == new_mi), \
+    SECOND_TEST_PERSON.modify_middle_initial(new_mi)
+    assert(SECOND_TEST_PERSON.get_middle_initial() == new_mi), \
         "modify_middle_initial failed to modify middle initial with None for person"
 
 
@@ -189,62 +187,60 @@ def person_modify_middle_initial_null():
 # JOB TITLE
 #**************************************************************************************************
 
-def person_get_job_title():
+def test_person_get_job_title():
     # successfully retrieve job title
     assert(TEST_STAFF.get_job_title() == JOB_TITLE), \
         "get_job_title failed to retrieve job title for person of staff type"
 
-def person_get_none_job_title():
-    assert(TEST_CUSTOMER.get_job_title() == None), \
+def test_person_get_none_job_title():
+    assert(TEST_PERSON.get_job_title() == None), \
         "get_job_title failed to retrieve job title of None for person"
 
-def person_modify_job_title():
+def test_person_modify_job_title():
     # successfully modify staff member's job title
     new_title = "associate sales engineer"
     TEST_STAFF.modify_job_title(new_title)
-    assert(TEST_STAFF.get_job_title() == new_title), \
+    returned_title = TEST_STAFF.get_job_title() 
+    TEST_STAFF.modify_job_title(JOB_TITLE)
+    assert(returned_title == new_title), \
         "modify_job_title failed to modify job title for person"
 
 #**************************************************************************************************
 # SALARY
 #**************************************************************************************************
 
-def person_get_salary():
+def test_person_get_salary():
     # successfully retrieve salary
     assert(TEST_STAFF.get_salary() == SALARY), \
         "get_salary did not retrieve salary for person"
 
-def person_modify_salary():
+def test_person_modify_salary():
     # successfully modify staff member's salary
     TEST_STAFF.modify_salary(50000)
-    assert(TEST_STAFF.get_salary() == 50000), \
+    returned_salary = TEST_STAFF.get_salary()
+    TEST_STAFF.modify_salary(45000)
+    assert(returned_salary == 50000), \
         "modify_salary failed to modify person's salary"
 
 #**************************************************************************************************
 # CART and BALANCE
 #**************************************************************************************************
 
-def person_get_None_cart():
+def test_person_get_None_cart():
     # successfully retrieve None for customer without cart
-    assert(TEST_CUSTOMER.get_cart() == None), \
+    assert(TEST_PERSON.get_cart() == None), \
         "get_cart failed to return None for customer person without cart"
 
-def person_add_cart_order():
-    # successfully retrieve cart instance
-    TEST_CUSTOMER.start_cart()
-    assert(isinstance(TEST_CUSTOMER.get_cart(), order.Order)), \
-        "start_cart failed to start order object for customer type person"
-
-
-def person_get_balance():
+def test_person_get_balance():
     # successfully get balance (as a customer or site administrator only)
-    TEST_CUSTOMER.add_product_to_cart(PRODUCT)
+    assert(TEST_PERSON.get_balance() == 0), \
+        "get_balance failed to return zerod balance"
 
 #**************************************************************************************************
 # TYPE
 #**************************************************************************************************
 
-def person_get_type():
+def test_person_get_type():
     # successfully retrieve type for person
     assert(TEST_STAFF.get_type() == "staff"), \
         "get_type failed to return type for person"
