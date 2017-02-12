@@ -57,6 +57,10 @@ def test_get_person():
     assert(TEST_CARD.get_person().get_id() == TEST_PERSON.get_id()), \
         "get_person did not return person reference for credit card"
 
+def test_person_through_credit_card():
+    assert(TEST_CARD.get_id() == TEST_PERSON.get_credit_cards()[0].get_id()), \
+        "get credit cards failed in person"
+
 #**************************************************************************************************
 #**  CARD NUMBER
 #**************************************************************************************************
