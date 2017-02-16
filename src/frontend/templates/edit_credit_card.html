@@ -1,0 +1,89 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+{% if credit_card %}
+<h1>Edit credit_card </h1>
+{% else %}
+<h1>Add new credit_card </h1>
+{% endif %}
+<form name='{{'update' if credit_card else 'add'}}_credit_card' method='POST' action="{{url_for('edit_credit_card', credit_card_id=credit_card.get_id()) if credit_card else url_for('add_credit_card')}}">
+{% if credit_card %}
+<input type='hidden' name='credit_card_id' value="{{ credit_card.get_id() }}" />
+{% endif %}
+    <table>
+        <tr>
+            <td>
+                <label for='credit_card_type'>Type</label>
+            </td>
+            <td>
+                <select name='credit_card_type'>
+                {% for type_name in credit_card_types %}
+                    <option name="{{ type_name }}" value="{{type_name}}" {{"SELECTED" if credit_card and credit_card.get_card_type() == type_name}}>{{ type_name }}</option>
+                {% endfor %}
+                </select>
+            </td>
+        <tr>
+            <td>
+                <label for='credit_card_number'>Card Number</label>
+            </td>
+            <td>
+                <input type='text' name='credit_card_number'  placeholder='XXXX-XXXX-XXXX-{{ (credit_card.get_card_number()|string)[-4:] if credit_card else "XXXX" }}' />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label for='credit_card_security_code'>CVV</label>
+            </td>
+            <td>
+                <input type='text' name='credit_card_security_code'  placeholder='XXX' />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label for='credit_card_expiration_month'>Expiration Month</label>
+            </td>
+            <td>
+                <select name='credit_card_expiration_month'>
+                {% for month in months %}
+                    <option value='{{month}}' {{"SELECTED" if credit_card and credit_card.get_expiration_date().month == (month|int)}}>{{month}}</option>
+                {% endfor %}
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label for='credit_card_expiration_year'>Expiration Year</label>
+            </td>
+            <td>
+                <select name='credit_card_expiration_year'>
+                {% for year in years %}
+                    <option value='{{year}}' {{"SELECTED" if credit_card and credit_card.get_expiration_date().year == (year|int)}}>{{year}}</option>
+                {% endfor %}
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label for='credit_card_address_id'>Address</label>
+            </td>
+            <td>
+                <select name='credit_card_address_id'>
+                {% for address in addresses %}
+                    <option value='{{address.get_id()}}' {{"SELECTED" if credit_card and credit_card.get_address().get_id() == address.get_id() }}>{{address.get_address_string()}}</option>
+                {% endfor %}
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <input type='submit' name='submit' value={{'Create' if not credit_card else 'Edit credit_card'}}>
+            </td>
+        </tr>
+    <table>
+</form>
+{% if credit_card %}
+<form action='{{url_for('delete_credit_card', credit_card_id=credit_card.get_id())}}' method='POST'>
+<input type='submit' value='Delete Card' />
+</form>
+{% endif %}
+{% endblock %}

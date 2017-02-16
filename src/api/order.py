@@ -29,8 +29,10 @@
 #*      -- products from list
 #***
 
-import product
 import address
+import database
+import product
+import person
 
 import datetime
 
@@ -39,16 +41,13 @@ class Order():
         db = database.connect()
         cursor = database.get_cursor(db)
 
-        if isinstance(given_id, int):
-            # Ensuring warehouse ID is in warehouses table
-            cursor.execute("select id from orders where id = :order_id", order_id = given_id)
-            if cursor.fetchone():
-                self._id = given_id
+        if not isinstance(given_id, int):
+            raise ValueError("Given ID not an int, id: %s" %str(given_id))
 
-            else:
-                print("Given ID not in orders table, id: %i" %given_id)
-        else:
-            print("Given ID not an int, id: %s" %str(given_id))
+        # Ensuring order ID is in warehouses table
+        cursor.execute("select id from orders where id = :order_id", order_id = given_id)
+        if cursor.fetchone():
+            self._id = given_id
 
         database.disconnect(db)
 
@@ -57,12 +56,11 @@ class Order():
         db = database.connect()
         cursor = database.get_cursor(db)
 
-        returned_id = returned_id = cursor.var(database.cx_Oracle.NUMBER)
-        initial_status = "pending"
+        returned_id = cursor.var(database.cx_Oracle.NUMBER)
 
-        status_id = cursor.fetchone()
-        if status_id:
-            status_id = status_id[0]
+        cursor.execute("select id from order_statuses where order_status = :input_status", \
+                        input_status = "pending")
+        status_id = cursor.fetchone()[0]
 
         if isinstance(customer, person.Person):
             cursor.execute("insert into orders (person_id, status_id) \
@@ -71,17 +69,29 @@ class Order():
                             input_pid = customer.get_id(), input_sid = status_id, \
                             output_id = returned_id)
             database.commit(db)
+
+
+        else:
+            raise ValueError("Requires valid person instance")
         
-        returned_id = returned_id.getvalue()
+        returned_id = int(returned_id.getvalue())
+        this_order = Order(returned_id)
+
         database.disconnect(db)
-        return Order(returned_id)
+
+        ship_addr = customer.get_default_address("shipping")
+        if ship_addr:
+            this_order.modify_shipping_address(ship_addr)
+
+        return this_order
+
 
     # Get Methods
 
     def get_id(self):
         return self._id
 
-    def get_product_list(self):
+    def get_products(self):
         db = database.connect()
         cursor = database.get_cursor(db)
         
@@ -93,37 +103,57 @@ class Order():
         returned_products = cursor.fetchall()
 
         if returned_products:
-            for product_id in returned_products:
-                product_list.append(product.Product(product_id))
+            for product_id_tuple in returned_products:
+                product_list.append(product.Product(product_id_tuple[0]))
 
         database.disconnect(db)
         return product_list
 
-    def get_product_quantity(self, product):
+    def get_product_quantity(self, this_product):
         db = database.connect()
         cursor = database.get_cursor(db)
 
+        if not isinstance(this_product, product.Product):
+            raise ValueError("product must be reference to product class")
+        cursor.execute("select quantity from order_to_product \
+                        where order_id = :input_id and product_id = :input_pid", \
+                        input_id = self.get_id(), input_pid = this_product.get_id())
+        quantity = cursor.fetchone()
+        database.disconnect(db)
+        if quantity:
+            return quantity[0]
+        else:
+            return 0
 
-        if isinstance(product, product.Product):
-            cursor.execute("select id from products where id = :input_pid", \
-                            input_pid = product.get_id())
-            if cursor.fetchone():
-                cursor.execute("select quantity from order_to_product \
-                                where order_id = :input_id and product_id = :input_pid", \
-                                input_id = self.get_id(), input_pid = product.get_id())
-                database.disconnect(db)
-                return cursor.fetchone()[0]
-            else:
-                database.disconnect(db)
-                return 0
+    def get_products_and_quantities(self):
+        db = database.connect()
+        cursor = database.get_cursor(db)
+        
+        product_dict = {}
+
+        cursor.execute("select product_id, quantity from order_to_product \
+                        where order_id = :input_id", \
+                        input_id = self.get_id())
+        returned_products = cursor.fetchall()
+
+        if returned_products:
+            for product_id_tuple in returned_products:
+                product_dict[product.Product(product_id_tuple[0])] = product_id_tuple[1]
+
+        database.disconnect(db)
+        return product_dict
 
     def get_total_cost(self):
-        total_cose = 0
-        product_list = self.get_product_list()
-        if product_list and self.get_shipping_address():
-            for product in product_list:
-                total_cost += product.get_price_per_state(self.get_shipping_address().get_state()) \
-                              * self.get_product_quantity(product)
+        total_cost = 0
+        product_list = self.get_products()
+        ship_address = self.get_shipping_address()
+        if not product_list:
+            return 0
+        if not ship_address:
+            raise ValueError("Order must have shipping address set before total can be given")
+        for product in product_list:
+            total_cost += product.get_price_per_state(ship_address.get_state()) \
+                          * self.get_product_quantity(product)
         return total_cost
 
     def get_status(self):
@@ -149,7 +179,7 @@ class Order():
         customer_id_tuple = cursor.fetchone()
         database.disconnect(db)
         if customer_id_tuple:
-            return customer.Customer(customer_id_tuple()[0])
+            return person.Person(customer_id_tuple[0])
         else:
             print("person id was not found, this should never happen")
 
@@ -161,10 +191,15 @@ class Order():
                         input_id = self.get_id())
         shipping_id_tuple = cursor.fetchone()
         database.disconnect(db)
-        if shipping_id_tuple:
+        if shipping_id_tuple[0]:
             return address.Address(shipping_id_tuple[0])
         else:
+            cust_ship_addr = self.get_customer().get_default_address("shipping")
+            if cust_ship_addr:
+                self.modify_shipping_address(cust_ship_addr)
+                return cust_ship_addr
             print("Shipping address not set for this order.")
+            return None
 
     def get_billing_address(self):
         db = database.connect()
@@ -174,24 +209,24 @@ class Order():
                         input_id = self.get_id())
         billing_id_tuple = cursor.fetchone()
         database.disconnect(db)
-        if billing_id_tuple:
+        if billing_id_tuple[0]:
             return address.Address(billing_id_tuple[0])
         else:
             print("Shipping address not set for this order.")
+            return None
 
     def get_submission_date(self):
         db = database.connect()
         cursor = database.get_cursor(db)
 
         if self.get_status() == "pending":
-            print("Order has not yet been submitted.")
             return None
 
         cursor.execute("select submission_date from orders where id = :input_id", \
                         input_id = self.get_id())
         submission_date_tuple = cursor.fetchone()
         if submission_date_tuple:
-            submission_date = submission_date_tuple[0].getvalue()
+            submission_date = submission_date_tuple[0]
         database.disconnect(db)
         return submission_date
 
@@ -245,91 +280,127 @@ class Order():
         db = database.connect()
         cursor = database.get_cursor(db)
 
-        if isinstance(new_product, product.Product):
-            current_quantity = self.get_product_quantity(product)
-            if current_quantity == 0:
-                # Product not yet in order
-                cursor.execute("insert into order_to_product \
-                                (order_id, product_id) values (:input_oid, :input_pid)", \
-                                input_oid = self.get_id(), input_pid = new_product.get_id())
-                database.commit(db)
-            else:
-                # Product already in order, incriment quantity
-                cursor.execute("update order_to_product set quantity = :input_quantity \
-                                where order_id = :input_oid and product_id = :input_pid", \
-                                input_quantity = (current_quantity + 1), \
-                                input_oid = self.get_id(), input_pid = new_product.get_id())
-                database.commit(db)
+        if not isinstance(new_product, product.Product):
+            raise ValueError("product must be reference to product class")
+        current_quantity = self.get_product_quantity(new_product)
+        if current_quantity == 0:
+            # Product not yet in order
+            cursor.execute("insert into order_to_product \
+                            (order_id, product_id, quantity) \
+                            values (:input_oid, :input_pid, 1)", \
+                            input_oid = self.get_id(), input_pid = new_product.get_id())
+            database.commit(db)
         else:
-            print("new product must be a product instance")
+            # Product already in order, incriment quantity
+            cursor.execute("update order_to_product set quantity = :input_quantity \
+                            where order_id = :input_oid and product_id = :input_pid", \
+                            input_quantity = (current_quantity + 1), \
+                            input_oid = self.get_id(), input_pid = new_product.get_id())
+            database.commit(db)
         database.disconnect(db)
 
-    def remove_product(self, product):
+    def remove_product(self, unwanted_product):
         db = database.connect()
         cursor = database.get_cursor(db)
 
-        if isinstance(product, product.Product):
-            current_quantity = self.get_product_quantity(product)
+        if isinstance(unwanted_product, product.Product):
+            current_quantity = self.get_product_quantity(unwanted_product)
             if current_quantity > 1:
                 # Product already in order, decriment quantity
                 cursor.execute("update order_to_product set quantity = :input_quantity \
                                 where order_id = :input_oid and product_id = :input_pid", \
                                 input_quantity = (current_quantity - 1), \
-                                input_oid = self.get_id(), input_pid = product.get_id())
+                                input_oid = self.get_id(), input_pid = unwanted_product.get_id())
                 database.commit(db)
             elif current_quantity == 1:
                 # Only one product exists, remove row from DB
                 cursor.execute("delete from order_to_product \
                                 where order_id = :input_oid and product_id = :input_pid", \
-                                input_oid = self.get_id(), input_pid = product.get_id())
+                                input_oid = self.get_id(), input_pid = unwanted_product.get_id())
                 database.commit(db)
             else:
                 print("Product does not exist in order, doing nothing")
         else:
-            print("product must be a product instance")
+            raise ValueError("product must be a product instance")
         database.disconnect(db)
 
-    def modify_product_quantity(self, product, new_quantity):
+    def modify_product_quantity(self, new_product, new_quantity):
         db = database.connect()
         cursor = database.get_cursor(db)
 
-        if isinstance(new_quantity, int) and new_quantity >= 0:
-            
-            if isinstance(product, product.Product):
-                if new_quantity == 0:
-                    # Remove product from table
-                    cursor.execute("delete from order_to_product \
-                                    where order_id = :input_oid and product_id = :input_pid", \
-                                    input_oid = self.get_id(), input_pid = product.get_id())
-                    database.commit(db)
-                else:
-                    current_quantity = self.get_product_quantity(product)
-                    if current_quantity != 0:
-                        # Product already exists, just update its quantity
-                        cursor.execute("update order_to_product set quantity = :input_quantity \
-                                        where order_id = :input_oid and product_id = :input_pid", \
-                                        input_quantity = new_quantity, \
-                                        input_oid = self.get_id(), input_pid = product.get_id())
-                        database.commit(db)
-                    else:
-                        # Product doesn't exist, add new row
-                        cursor.execute("insert into order_to_product \
-                                        (order_id, product_id, quantity) \
-                                        values (:input_oid, :input_pid, :input_quantity", \
-                                        input_quantity = new_quantity, \
-                                        input_oid = self.get_id(), input_pid = product.get_id())
-                        database.commit(db)
-            else:
-                print("product to change quantity must be valid product in products table")
+        if not isinstance(new_quantity, int):
+            raise ValueError("Specified quantity must be an int")
+        if new_quantity < 0:
+            raise ValueError("New quantity must be >= 0\nquantity given: %i" %(new_quantity))
+        if not isinstance(new_product, product.Product):
+            raise ValueError("product to change quantity must be valid product in products table")
+        if new_quantity == 0:
+            # Remove product from table
+            cursor.execute("delete from order_to_product \
+                            where order_id = :input_oid and product_id = :input_pid", \
+                            input_oid = self.get_id(), input_pid = new_product.get_id())
+            database.commit(db)
         else:
-            print("specified quantity must be int >= 0 \nquantity given: %i" %(new_quantity))
+            current_quantity = self.get_product_quantity(new_product)
+            if current_quantity != 0:
+                # Product already exists, just update its quantity
+                cursor.execute("update order_to_product set quantity = :input_quantity \
+                                where order_id = :input_oid and product_id = :input_pid", \
+                                input_quantity = new_quantity, \
+                                input_oid = self.get_id(), input_pid = new_product.get_id())
+                database.commit(db)
+            else:
+                # Product doesn't exist, add new row
+                cursor.execute("insert into order_to_product \
+                                (order_id, product_id, quantity) \
+                                values (:input_oid, :input_pid, :input_quantity)", \
+                                input_oid = self.get_id(), input_pid = new_product.get_id(),
+                                input_quantity = new_quantity)
+                database.commit(db)
         database.disconnect(db)
 
-    def set_submission_date(self):
+    def submit(self):
         # Sets submission date to now
+        self.modify_status("shipping")
         db = database.connect()
         cursor = database.get_cursor(db)
+        now = datetime.datetime.now()
+        now = now.strftime('%d-%b-%Y')
         cursor.execute("update orders set submission_date = :input_date where id = :input_id", \
-                        input_date = datetime.datetime.now(), input_id = self.get_id())
+                        input_date = now, input_id = self.get_id())
         database.commit(db)
         database.disconnect(db)
+
+def get_all_orders():
+    db = database.connect()
+    cursor = database.get_cursor(db)
+    all_orders = []
+
+    cursor.execute("select id from orders")
+    order_tuples = cursor.fetchall()
+    
+    database.disconnect(db)
+
+    for order_tuple in order_tuples:
+        all_orders.append(Order(order_tuple[0]))
+
+    return all_orders
+
+def get_all_orders_of_status(status_string):
+    db = database.connect()
+    cursor = database.get_cursor(db)
+    selected_orders = []
+
+    cursor.execute("select id from order_statuses where order_status = :input_status", \
+                    input_status = status_string)
+    id_tuple = cursor.fetchone()
+
+    if not id_tuple:
+        raise ValueError("%s is not valid order type" %status_string)
+
+    all_orders = get_all_orders()
+    for order_ref in all_orders:
+        if order_ref.get_status() == status_string:
+            selected_orders.append(order_ref)
+
+    return selected_orders

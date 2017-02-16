@@ -1,0 +1,28 @@
+.message {
+	text-align: center;
+	border: 1px;
+	border-color: black;
+	background-color: lightgreen;
+}
+
+.warning {
+	text-align: center;
+	border: 1px;
+	border-color: black;
+	background-color: lightyellow;
+}
+
+.error {
+	text-align: center;
+	border: 1px;
+	border-color: black;
+	background-color: red;
+}
+
+.even {
+    background-color: palegreen;
+}
+
+.odd {
+    background-color: cornsilk;
+}

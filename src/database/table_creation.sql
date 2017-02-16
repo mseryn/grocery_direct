@@ -98,7 +98,7 @@ create table addresses
     address_type_id integer not null,
     person_id       integer,
     default_flag    integer default null,
-    constraint      default_flag_vals   check ((default_flag = null) or (default_flag = 1)),
+    constraint      default_flag_vals   check ((default_flag = null) or (default_flag = 1) or (default_flag = 0)),
     constraint      person_fk_for_addr  foreign key (person_id) references persons(id),
     constraint      state_code_fk       foreign key (state_code_id) references state_codes(id),
     constraint      address_type_fk     foreign key (address_type_id)  references address_types(id)
@@ -115,8 +115,8 @@ create table orders
     person_id       integer,
     constraint      person_fk_for_person   foreign key (person_id)        references persons(id),
     constraint      status_fk              foreign key (status_id)        references order_statuses(id),
-    constraint      order_billing_addr_fk  foreign key (billing_addr_id)  references addresses(id),
-    constraint      order_shipping_addr_fk foreign key (shipping_addr_id) references addresses(id)
+    constraint      order_billing_addr_fk  foreign key (billing_addr_id)  references addresses(id) on delete set null,
+    constraint      order_shipping_addr_fk foreign key (shipping_addr_id) references addresses(id) on delete set null
 );
 
 create table credit_cards
@@ -130,7 +130,7 @@ create table credit_cards
     person_id       integer,
     constraint      person_fk_for_cc     foreign key (person_id)       references persons(id),
     constraint      card_type_fk         foreign key (card_type_id)    references card_types(id),
-    constraint      card_billing_addr_fk foreign key (billing_addr_id) references addresses(id)
+    constraint      card_billing_addr_fk foreign key (billing_addr_id) references addresses(id) on delete set null
 );
 
 create table product_images
@@ -161,7 +161,7 @@ create table warehouses
     id              integer generated always as identity primary key,
     capacity        integer not null,
     address_id      integer,
-    constraint      address_fk foreign key (address_id) references addresses(id)
+    constraint      address_fk foreign key (address_id) references addresses(id) on delete set null
 );
 
 
@@ -174,8 +174,8 @@ create table order_to_product
     order_id        integer,
     product_id      integer,
     quantity        numeric(8, 2) not null,
-    constraint order_to_product_fk foreign key (order_id)   references orders(id),
-    constraint product_to_order_fk foreign key (product_id) references products(id)
+    constraint order_to_product_fk foreign key (order_id)   references orders(id) on delete cascade,
+    constraint product_to_order_fk foreign key (product_id) references products(id) on delete cascade
 );
 
 create table warehouse_to_product
@@ -184,7 +184,7 @@ create table warehouse_to_product
     product_id      integer,
     quantity        integer default 1,
     constraint warehouse_to_product_fk foreign key (warehouse_id) references warehouses(id),
-    constraint product_to_warehouse_fk foreign key (product_id)   references products(id),
+    constraint product_to_warehouse_fk foreign key (product_id)   references products(id) on delete cascade, 
     constraint product_quantity_check  check (quantity > 0)
 );
 
@@ -194,7 +194,7 @@ create table state_to_product
     product_id      integer,
     state_price     numeric(8, 2) not null,
     constraint state_code_to_product_fk  foreign key (state_id)   references state_codes(id),
-    constraint product_to_state_fk  foreign key (product_id) references products(id),
+    constraint product_to_state_fk  foreign key (product_id) references products(id) on delete cascade,
     constraint product_price_check check (state_price > 0)
 );
 
@@ -204,7 +204,7 @@ create table supplier_to_product
     product_id      integer,
     supplier_price  numeric(8, 2) not null,
     constraint supplier_to_product_fk foreign key (supplier_id) references persons(id),
-    constraint product_to_supplier_fk foreign key (product_id)  references products(id)
+    constraint product_to_supplier_fk foreign key (product_id)  references products(id) on delete cascade
 );
 
 select * from DUAL;

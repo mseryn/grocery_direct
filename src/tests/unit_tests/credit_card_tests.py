@@ -58,7 +58,8 @@ def test_get_person():
         "get_person did not return person reference for credit card"
 
 def test_person_through_credit_card():
-    assert(TEST_CARD.get_id() == TEST_PERSON.get_credit_cards()[0].get_id()), \
+    card = credit_card.CreditCard(TEST_PERSON.get_credit_cards()[0].get_id())
+    assert( isinstance(card, credit_card.CreditCard)), \
         "get credit cards failed in person"
 
 #**************************************************************************************************
@@ -66,7 +67,7 @@ def test_person_through_credit_card():
 #**************************************************************************************************
 
 def test_get_card_no():
-    assert(TEST_CARD.get_card_number() == CARD_NO % 1000), \
+    assert(TEST_CARD.get_card_number() == CARD_NO), \
         "get_card_number did not return card number for credit card"
 
 def test_modify_card_no():
@@ -74,7 +75,7 @@ def test_modify_card_no():
     TEST_CARD.modify_card_number(new_number) 
     stored_card_no = TEST_CARD.get_card_number()
     TEST_CARD.modify_card_number(CARD_NO)
-    assert(stored_card_no == new_number % 1000), \
+    assert(stored_card_no == new_number), \
         "modify_card_number did not modify and return card number for credit card"
 
 #**************************************************************************************************

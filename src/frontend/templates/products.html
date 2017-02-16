@@ -1,0 +1,22 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<form name='product_search'>
+<input name='search_term' placeholder='Search products' type='text' />
+<input type='submit' value='Search' />
+</form>
+
+{% if session['user_type'] == 'staff' %}
+<a href="{{url_for('add_product')}}">Add new product</a>
+{% endif %}
+
+<table style="border: 2px;">
+{% for product in products %}
+    <tr class="{{ loop.cycle('odd', 'even') }}">
+        <td> <a href={{url_for('view_product', product_id=product.get_id())}}>{{ product.get_name() }}</a></td>
+        <td> {{ product.get_description() }} </td>
+    </tr>
+{% endfor %}
+</table>
+
+{% endblock %}

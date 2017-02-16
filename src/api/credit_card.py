@@ -162,21 +162,24 @@ class CreditCard():
         return address.Address(returned_id[0])
 
     def get_card_number(self):
-        # Note: this returns the last 4 digits of the card number
         db = database.connect()
         cursor = database.get_cursor(db)
+        
         cursor.execute("select card_number from credit_cards \
                         where id = :input_id", \
                         input_id = self.get_id())
+        
         card_no = cursor.fetchone()
+        
         database.disconnect(db)
+        
         if not card_no:
             raise Exception("Card number not found in table. This should never happen, fatal.")
-        # Returning last 4 digits
-        return card_no[0] % 1000
+        return card_no[0]
 
     def get_card_type(self):
         db = database.connect()
+        
         cursor = database.get_cursor(db)
         cursor.execute("select card_types.card_type \
                         from card_types join credit_cards \
@@ -184,7 +187,9 @@ class CreditCard():
                         where credit_cards.id = :input_id", \
                         input_id = self.get_id())
         type_string = cursor.fetchone()
+
         database.disconnect(db)
+        
         if not type_string:
             raise ValueError("Type string/ID not found in table. This should never happen, fatal.")
         return type_string[0]
@@ -192,10 +197,12 @@ class CreditCard():
     def get_expiration_date(self):
         db = database.connect()
         cursor = database.get_cursor(db)
+        
         cursor.execute("select expiration_date from credit_cards \
                         where id = :input_id", \
                         input_id = self.get_id())
         date = cursor.fetchone()
+        
         if not date:
             raise ValueError("Date not found, this should never happen. Fatal.")
         date = date[0]   # This should be a datetime.datetime object by CX oracle's documentation
@@ -208,11 +215,14 @@ class CreditCard():
         # Ensures given code matches stored code
         db = database.connect()
         cursor = database.get_cursor(db)
+        
         cursor.execute("select security_code from credit_cards \
                         where id = :input_id", \
                         input_id = self.get_id())
         stored_code = cursor.fetchone()
+        
         database.disconnect(db)
+        
         if not stored_code[0] == sec_code:
             return False
         else:
@@ -224,15 +234,20 @@ class CreditCard():
         # Ensuring type string has associated ID in card types table
         db = database.connect()
         cursor = database.get_cursor(db)
+
         cursor.execute("select id from card_types where card_type = :input_type", \
                         input_type = new_type_string)
         type_id = cursor.fetchone()
+
         if not type_id:
             raise ValueError("Card type string %s not found in card types table" %type_string)
+
         type_id = type_id[0]
+
         cursor.execute("update credit_cards set card_type_id = :input_type \
                         where id = :input_id", \
                         input_type = type_id, input_id = self.get_id())
+
         database.commit(db)
         database.disconnect(db)
 
@@ -242,25 +257,32 @@ class CreditCard():
             raise ValueError("Card number must be integer value")
         if not len(str(new_number)) == 16:
             raise ValueError("Card number must be int of 16 digits")
+
         db = database.connect()
         cursor = database.get_cursor(db)
+
         cursor.execute("update credit_cards set card_number = :input_number \
                         where id = :input_id",\
                         input_number = new_number, input_id = self.get_id())
+
         database.commit(db)
         database.disconnect(db)
 
     def modify_security_code(self, new_code):
         # Type- and value-checking inputs
+
         if not isinstance(new_code, int):
             raise ValueError("Security code must be integer value")
         if not len(str(new_code)) == 3:
             raise ValueError("Security code must be into of 3 digits")
+
         db = database.connect()
         cursor = database.get_cursor(db)
+
         cursor.execute("update credit_cards set security_code = :input_code \
                         where id = :input_id",\
                         input_code = new_code, input_id = self.get_id())
+
         database.commit(db)
         database.disconnect(db)
 
@@ -268,20 +290,25 @@ class CreditCard():
         # Ensuring address' ID is in addresses table AND it is a billing address
         db = database.connect()
         cursor = database.get_cursor(db)
+
         cursor.execute("select id from addresses \
                         where id = :input_id", \
                         input_id = new_address_reference.get_id())
         address_id = cursor.fetchone()
+
         if not address_id:
             raise ValueError("Address not found in addresses table")
         else:
             address_id = address_id[0]
+
         address_reference = address.Address(address_id)
         if not address_reference.get_type() == "billing":
             raise ValueError("Address must be billing type. Type is %s." %address_reference.get_type())
+
         cursor.execute("update credit_cards set billing_addr_id = :input_addr \
                         where id = :input_id",\
                         input_addr = address_id, input_id = self.get_id())
+
         database.commit(db)
         database.disconnect(db)
 
@@ -295,13 +322,26 @@ class CreditCard():
             raise ValueError("Expiration month must be between 1 and 12")
         if not len(str(new_expiration_year)) == 4:
             raise ValueError("Expiration year must be 4 digit integer")
+
         # Formatting the date
         expiration_date = format_date(new_expiration_month, new_expiration_year)
+
         db = database.connect()
         cursor = database.get_cursor(db)
+
         cursor.execute("update credit_cards set expiration_date = :input_date \
                         where id = :input_id",\
                         input_date = expiration_date, input_id = self.get_id())
+
+        database.commit(db)
+        database.disconnect(db)
+
+    def remove(self):
+        db = database.connect()
+        cursor = database.get_cursor(db)
+
+        cursor.execute("delete from credit_cards where id = :input_id", input_id = self.get_id())
+
         database.commit(db)
         database.disconnect(db)
 
@@ -312,3 +352,18 @@ def format_date(month, year):
     # We don't care about the day or time in this case, so set to useless values
     date_object = datetime.datetime(year, month, 1, 0, 0)
     return date_object.strftime('%d-%b-%Y')
+
+def get_all_card_types():
+    db = database.connect()
+    cursor = database.get_cursor(db)
+    types = []
+
+    cursor.execute("select card_type from card_types")
+    type_tuples = cursor.fetchall()
+
+    for type_tuple in type_tuples:
+        types.append(type_tuple[0])
+
+    database.disconnect(db)
+
+    return types

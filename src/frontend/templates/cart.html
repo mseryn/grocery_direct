@@ -1,0 +1,29 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<table style="border: 2px;">
+{% for product, quantity in products.iteritems() %}
+    <tr class="{{ loop.cycle('odd', 'even') }}">
+        <td> <a href={{url_for('view_product', product_id=product.get_id())}}>{{ product.get_name() }}</a></td>
+        <td> 
+            <form method='POST'>
+                <input type='hidden' name='product_id' value='{{product.get_id()}}' />
+                <input type='hidden' name='cart_id' value='{{cart.get_id()}}' />
+                <input type='hidden' name='diff' value='-1' />
+                <input type='image' src='{{url_for('static', filename='minus.png')}}' alt='Lower quantity' />
+            </form>
+            {{ quantity }}
+            <form method='POST'>
+                <input type='hidden' name='product_id' value='{{product.get_id()}}' />
+                <input type='hidden' name='cart_id' value='{{cart.get_id()}}' />
+                <input type='hidden' name='diff' value='1' />
+                <input type='image' src='{{url_for('static', filename='plus.png')}}' alt='Lower quantity' />
+            </form>
+        </td>
+    </tr>
+{% endfor %}
+</table>
+<form name='submit_cart' action='{{url_for('cart_submit')}}'>
+<input name='submit_cart' value='Submit order' type='submit'>
+</form>
+{% endblock %}

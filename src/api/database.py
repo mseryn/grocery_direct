@@ -12,10 +12,14 @@ import cx_Oracle
 DATABASE_NAME       = "grocerydirect"
 DATABASE_PASSWORD   = "oracle"
 
+db_handle = None
+
 def connect():
     """ Returns DB handle """
-    db = cx_Oracle.connect(DATABASE_NAME, DATABASE_PASSWORD)
-    return db
+    global db_handle
+    if not db_handle:
+        db_handle = cx_Oracle.connect(DATABASE_NAME, DATABASE_PASSWORD)
+    return db_handle
 
 def get_cursor(handle):
     """ Requires DB handle, returns cursor """
@@ -28,4 +32,5 @@ def commit(handle):
 
 def disconnect(handle):
     """ Requires DB handle, closes that handle """
-    handle.close()
+    # Leaving the connection open for now
+    # handle.close()

@@ -1,0 +1,17 @@
+{% extends 'layout.html' %}
+{% block content %}
+<a href='{{url_for('add_credit_card')}}'>Add new credit_card</a>
+<table>
+    {% for credit_card in credit_cards %}
+    <tr>
+        <td>
+            <h3> XXXX-XXXX-XXXX-{{ (credit_card.get_card_number()|string)[-4:] }} </h3>
+        </td>
+        <td>
+            <a href='{{url_for('edit_credit_card', credit_card_id = credit_card.get_id())}}'>Edit</a>
+        </td>
+    </tr>
+    {% endfor %}
+<table>
+
+{% endblock %}

@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+	<head>
+		{% if session.username %}
+		<title> GroceryDirect - {{ session.username }} </title>
+		{% else %}
+		<title> GroceryDirect - Not logged in </title>
+		{% endif %}
+		<link rel='stylesheet' href='{{url_for('static', filename='main.css')}}' />
+	</head>
+	<body>
+		{% for category, message in get_flashed_messages(with_categories=True) %}
+		<div class="{{category}}">{{message}}</div>
+		{% endfor %}
+		{% if not session.logged_in %}
+			<a href="{{ url_for('login') }}">Log in</a>
+		{% else %}
+		<div style='float: left; width: 15%' name='top_nav'>
+			{% for nav in navs %}
+			<a href="{{ nav[0] }}">{{ nav[1] }}</a>
+				{% if not loop.last %}
+			</BR>
+				{% endif %}
+			{% endfor %}
+		</div>
+		<div style='float: right; text-align: left; width: 85%' name='content'>
+			{% block content %}{%endblock%}
+		</div>
+		{% endif %}
+	</body>
+</html>

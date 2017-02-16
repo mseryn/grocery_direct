@@ -40,6 +40,19 @@ TEST_STATE_CODE     = "AZ"
 TEST_ZIP_CODE       = 12345
 TEST_TYPE_STRING    = "shipping"
 
+# Default strings for test person
+FNAME       = "FirstName"
+LNAME       = "LastName"
+MIDDLE_INIT = "M" 
+USERNAME    = "testaccount"
+PASSWORD    = "testpassword"
+
+# Test objects (avoid cluttering db)
+CUSTOMER = person.check_credentials(USERNAME, PASSWORD)
+if not CUSTOMER:
+        CUSTOMER  = person.Person.new_person(USERNAME, PASSWORD, FNAME, LNAME, "customer", \
+                           middle_initial = MIDDLE_INIT)
+
 #**************************************************************************************************
 #**  ADDRESS: PERSON
 #**************************************************************************************************
@@ -53,9 +66,8 @@ def test_address_get_null_person():
 def test_address_add_person():
     test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
-    TEST_PERSON = person.Person(1)
-    test_address.add_person(TEST_PERSON)
-    assert(test_address.get_person().get_id() == TEST_PERSON.get_id()), "get and add person did \
+    test_address.add_person(CUSTOMER)
+    assert(test_address.get_person().get_id() == CUSTOMER.get_id()), "get and add person did \
         not correctly function for address"
 
 #**************************************************************************************************
@@ -114,7 +126,7 @@ def test_address_get_apt():
 def test_address_get_apt_none():
     test_address = address.Address.new_address(TEST_STREET, TEST_CITY, TEST_STATE_CODE, TEST_ZIP_CODE, \
         TEST_TYPE_STRING)
-    assert(test_address.get_apartment_no() == None), \
+    assert(test_address.get_apartment_no() == ""), \
         "get_apartment_no() did not return None for nonexistant apartment no. line for address"
 
 def test_address_modify_apt():

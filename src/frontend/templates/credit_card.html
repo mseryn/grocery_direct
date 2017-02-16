@@ -1,0 +1,55 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<h1>View credit_card </h1>
+    <table>
+        <tr>
+            <td>
+                <label for='credit_card_type'>Type</label>
+            </td>
+            <td>
+                {{credit_card.get_card_type()}}
+            </td>
+        <tr>
+            <td>
+                <label for='credit_card_number'>Card Number</label>
+            </td>
+            <td>
+                {{credit_card.get_card_number()}}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label for='credit_card_security_code'>CVV</label>
+            </td>
+            <td>
+                XXX
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label for='credit_card_expiration_month'>Expiration Month</label>
+            </td>
+            <td>
+                {{credit_card.get_expiration_date().month}}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label for='credit_card_expiration_year'>Expiration Year</label>
+            </td>
+            <td>
+                {{credit_card.get_expiration_date().year}}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label for='credit_card_address_id'>Address</label>
+            </td>
+            <td>
+                {{credit_card.get_address().get_address_string()}}
+            </td>
+        </tr>
+    <table>
+</form>
+{% endblock %}

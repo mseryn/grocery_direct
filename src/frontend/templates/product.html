@@ -1,0 +1,93 @@
+{% extends 'layout.html' %}
+{% block content %}
+<table>
+    <tr>
+        <td>
+            <h3> {{ product.get_name() }} </h3>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <div class='description'> {{ product.get_description() }} </div>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            Nutrition facts:
+        </td>
+        <td>
+            {{ product.get_nutrition_facts() }}
+        </td>
+    </tr>
+    <tr>
+        <td>
+            Alcohol content:
+        </td>
+        <td>
+            {{ product.get_alcohol_content() }}
+        </td>
+    </tr>
+    <tr>
+{% if session['user_type'] and session['user_type'] == 'user' %}
+        <td>
+            Price:
+        </td>
+        <td>
+        </td>
+{% elif session['user_type'] and session['user_type'] == 'staff' %}
+        <td>
+            Prices:
+        </td>
+        <td>
+            <table>
+                {% for state, price in product.get_all_prices().iteritems() %}
+                    <tr>
+                        <td>
+                            {{ state }}
+                        </td>
+                        <td>
+                            {{ price }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <form name="add_to_warehouse" action="{{url_for('add_to_warehouse', product_id = product.get_id())}}" method='POST'>
+            <td>
+                <input type='number' name='product_quantity' value=1 />
+            </td>
+            <td>
+                <select name='product_warehouse_id'>
+                {% for warehouse in warehouses %}
+                    <option value='{{warehouse.get_id()}}'>{{warehouse.get_address().get_address_string()}}</option>
+                {%endfor%}
+                </select>
+            </td>
+            <td>
+                <input type='submit' value='Add to warehouse' />
+            </td>
+{% endif %}
+    </tr>
+        
+{% if session['user_type'] and session['user_type'] == 'customer' %}
+    <tr>
+        <td>
+            <form method='POST' action='/cart' name='add_to_cart'>
+                <input type='hidden' name='product_id' value='{{product.get_id()}}' />
+                <input type='number' name='diff' value=1 />
+                <input type='submit' value='Add to cart' />
+            </form>
+        </td>
+    </tr>
+{% elif session['user_type'] and session['user_type'] == 'staff' %}
+    <tr>   
+        <td>
+            <a href='{{url_for('edit_product', product_id=product.get_id())}}'>Edit</a>
+        </td>
+    </tr>
+{% endif %}
+<table>
+
+{% endblock %}

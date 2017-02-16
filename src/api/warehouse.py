@@ -79,6 +79,7 @@ class Warehouse():
         return cap
 
     def get_stock(self):
+        """ Returns simple list of product references """
         db = database.connect()
         cursor = database.get_cursor(db)
         stock = []
@@ -92,6 +93,14 @@ class Warehouse():
                 stock.append(product.Product(int(product_id[0])))
         database.disconnect(db)
         return stock
+
+    def get_products_and_quantities(self):
+        product_to_quan = {}
+        products = self.get_stock()
+        for each_product in products:
+            product_to_quan[each_product] = self.get_product_quantity(each_product)
+
+        return product_to_quan
 
     def get_product_quantity(self, product):
         db = database.connect()
@@ -241,3 +250,15 @@ class Warehouse():
         else:
             raise ValueError("new quantity must be positive integer value")
         database.disconnect(db)
+
+def get_all_warehouses():
+    # Returns list of references to warehouses
+    db = database.connect()
+    cursor = database.get_cursor(db)
+    warehouses = []
+    cursor.execute("select id from warehouses")
+    ids = cursor.fetchall()
+    for id_tuple in ids:
+        warehouses.append(Warehouse(id_tuple[0]))
+    database.disconnect(db)
+    return warehouses

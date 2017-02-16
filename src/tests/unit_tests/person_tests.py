@@ -226,11 +226,6 @@ def test_person_modify_salary():
 # CART and BALANCE
 #**************************************************************************************************
 
-def test_person_get_None_cart():
-    # successfully retrieve None for customer without cart
-    assert(TEST_PERSON.get_cart() == None), \
-        "get_cart failed to return None for customer person without cart"
-
 def test_person_get_balance():
     # successfully get balance (as a customer or site administrator only)
     assert(TEST_PERSON.get_balance() == 0), \
@@ -250,4 +245,6 @@ def test_person_get_type():
 #**************************************************************************************************
 
 def get_order_history():
-    pass
+    print(TEST_PERSON.get_order_history())
+    assert(TEST_PERSON.get_order_history() != None), \
+        "get_balance failed to return zerod balance"

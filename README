@@ -20,18 +20,27 @@ Virt details:
     -- Username is usually oracle, Oracle, orcl, Orcl, or system (for db)
     -- All passwords (not root): oracle
 
-TODO: SIMPLIFY AND REVISE BEFORE SUBMISSION
-
 Instructions:
     To build tables:
     > cd 425_project/src/database
     > sqlplus
-    username: system
+    username: grocerydirect
     password: oracle
     > sql: @table_creation.sql
     > sql: exit
-    > python populate_tables.py
+    > ./populate_tables.py
 
-    To run tests:
+    To build a small number of useful test items, run ONLY ONCE:
+    > cd ../api
+    > ./make_items_for_demo.py
+
+    To run tests: (warning - this will clutter the DB)
     > cd 425_project/src/tests/unit_tests
     > PYTHONPATH=../../api/ pytest <filename.py>
+
+    To run frontend on localhost:5000:
+    > cd 425_project/src/frontend
+    > ./runfrontend.py
+
+NOTE ABOUT COMMIT HISTORY:
+Git repository was corrupted. Cleanup was necessary. Some commits were lost in this time.

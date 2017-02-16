@@ -1,0 +1,21 @@
+{% extends 'layout.html' %}
+{% block content %}
+<table>
+    <tr>
+        <td>
+            <h3> {{ warehouse.get_address().get_address_string() }} </h3>
+        </td>
+    </tr>
+    {% for product, quantity in warehouse.get_products_and_quantities().iteritems() %}
+    <tr>
+        <td>
+            {{product.get_name()}}
+        </td>
+        <td>
+            {{quantity}}
+        </td>
+    </tr>
+    {% endfor %}
+<table>
+
+{% endblock %}
